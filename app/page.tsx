@@ -1,65 +1,343 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { Star, Search, ChevronRight, Film } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Movie, Genre } from "@/models/movie";
+import { useMovies } from "@/hooks/useMovies";
+import Image from "next/image";
+import FeaturedReview from "@/components/Featured";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Pagination from "@/components/pagination";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import Loader from "@/components/Loader";
+import { useRouter } from "next/navigation";
+import { getGenreName } from "@/lib/helpers";
+
+// Helper functions
+const formatRating = (rating: number | undefined | null): string => {
+  if (rating === undefined || rating === null || isNaN(rating)) return "N/A";
+  return rating.toFixed(1);
+};
+
+const getReleaseYear = (dateString: string | undefined | null): string => {
+  if (!dateString) return "TBA";
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? "TBA" : String(date.getFullYear());
+};
+
+export default function HomePage() {
+  const router = useRouter();
+  const {
+    movieData,
+    genreData,
+    page,
+    fetchMovies,
+    fetchGenres,
+    genreMoviesData,
+    fetchGenreMovies,
+  } = useMovies();
+
+  const movies = movieData?.data?.movies ?? [];
+  const totalPages = movieData?.data?.total_pages ?? 1;
+
+  const [search, setSearch] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const featured = movies.slice(0, 3);
+  const genres: Genre[] = genreData?.data ?? [];
+  const popularMovies: Movie[] = movies.slice(3, 21);
+  const genreMovies: Movie[] = genreMoviesData?.data?.movies ?? [];
+  const [showPopular, setShowPopular] = useState<boolean>(true);
+  const displayedMovies = showPopular ? popularMovies : genreMovies;
+
+  // Initial fetch
+  useEffect(() => {
+    fetchMovies(page);
+    fetchGenres();
+  }, [page]);
+
+  const handleLatestReviews = (id: number) => {
+    if (isNaN(id) || !id) return;
+    setShowPopular(false);
+    fetchGenreMovies(page, id);
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!search.trim()) return;
+
+    setSearchLoading(true);
+    setSearchError(null);
+    try {
+      router.push(`/movies?search=${encodeURIComponent(search.trim())}`);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchError("Search failed. Please try again.");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const goToPage = (newPage: number) => {
+    fetchMovies(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Loading state
+  if (movieData.loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader />
+          <p className="text-white mt-4">Loading movies...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (movieData.error) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-xl">Error: {movieData.error}</p>
+          <button
+            onClick={() => fetchMovies(page)}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      {/* ── Hero Section ── */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <Badge className="bg-red-600/20 text-red-300 border-red-500/30 backdrop-blur-sm px-4 py-1 text-sm">
+            🍿 Movie Review Portfolio
+          </Badge>
+          <h1 className="mt-6 text-5xl font-extrabold tracking-tight sm:text-7xl bg-linear-to-r from-red-400 to-pink-500 bg-clip-text text-transparent">
+            CineCritic
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400">
+            In‑depth reviews, trailers, and film criticism from passionate movie
+            lovers.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          {/* Search Bar */}
+          <form
+            onSubmit={handleSearch}
+            className="mx-auto mt-8 flex max-w-md items-center gap-2 rounded-full border border-slate-700 bg-slate-800/50 px-5 py-3 text-slate-400 backdrop-blur-sm"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <Search className="h-4 w-4" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search movies..."
+              className="w-full bg-transparent px-3 text-sm text-slate-200 outline-none border-0 placeholder:text-slate-600"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {searchLoading && (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+            )}
+          </form>
+          {searchError && (
+            <p className="mt-2 text-sm text-red-400">{searchError}</p>
+          )}
         </div>
-      </main>
-    </div>
+
+        {/* Hero Carousel */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {featured.map((movie) => (
+            <FeaturedReview key={movie.id} movie={movie} />
+          ))}
+        </div>
+      </section>
+
+      {/* ── Latest Reviews Grid ── */}
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-slate-400 mr-2">Genres:</span>
+          {genres.map((genre) => (
+            <button
+              key={genre.id}
+              onClick={() => handleLatestReviews(genre.id)}
+            >
+              <Badge
+                variant="outline"
+                className="border-slate-700 text-slate-400 hover:border-red-500 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                {genre.name}
+              </Badge>
+            </button>
+          ))}
+        </div>
+        <div className="my-5 flex items-center justify-between">
+          <h2 className="text-3xl font-bold text-white">
+            {showPopular ? "Latest Reviews" : "Genre Movies"}
+          </h2>
+          <Link
+            href="/movies"
+            className="group flex items-center gap-1 text-sm font-medium text-red-400 hover:text-red-300"
+          >
+            View all{" "}
+            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+
+        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+          {displayedMovies.map((movie) => (
+            <Link key={movie.id} href={`/movies/${movie.id}`}>
+              <Card className="group h-full overflow-hidden border-slate-800 bg-slate-900/60 backdrop-blur transition-all hover:border-slate-700 hover:shadow-xl">
+                {/* Poster Container */}
+                <div className="aspect-2/3 overflow-hidden relative">
+                  {movie.poster_path ? (
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                      alt={movie.title}
+                      width={500}
+                      height={750}
+                      loading="eager"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-slate-800 text-slate-600">
+                      No Poster
+                    </div>
+                  )}
+                  <div className="absolute bottom-2 left-2 z-10">
+                    <Badge className="bg-black/70 backdrop-blur-sm">
+                      <Star className="mr-1 h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      {formatRating(movie.vote_average)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Content Container - FIXED: Moved outside poster div */}
+                <CardContent className="p-4">
+                  <h3 className="font-semibold leading-tight text-slate-100 line-clamp-2">
+                    {movie.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {getReleaseYear(movie.release_date)}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {movie.genre_ids
+                      ?.filter((gid) => !isNaN(gid) && gid !== null)
+                      .slice(0, 2)
+                      .map((gid) => (
+                        <Badge
+                          key={gid}
+                          variant="secondary"
+                          className="text-[10px]"
+                        >
+                          {getGenreName(gid,genres)}
+                        </Badge>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+          {genreMoviesData?.loading && <Loader />}
+        </div>
+
+        {/* Pagination: only show when popular is displayed */}
+        {showPopular && totalPages > 1 && (
+          <div className="mt-8">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+            />
+          </div>
+        )}
+      </section>
+
+      {/* ── Trending Now (Horizontal Scroll) ── */}
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-white">Trending Now</h2>
+        </div>
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex space-x-4 pb-4">
+            {movies.slice(0, 10).map((movie) => (
+              <Link
+                key={movie.id}
+                href={`/movies/${movie.id}`}
+                className="w-40 shrink-0 group"
+              >
+                <Card className="overflow-hidden border-slate-800 bg-slate-900/60 backdrop-blur transition hover:border-red-500/50 hover:shadow-lg">
+                  <div className="aspect-2/3 relative">
+                    {movie.poster_path ? (
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                        alt={movie.title}
+                        width={500}
+                        height={750}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center bg-slate-800 text-slate-600">
+                        <Film className="h-8 w-8" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 left-2">
+                      <Badge className="bg-black/70 backdrop-blur-sm">
+                        <Star className="mr-1 h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        {formatRating(movie.vote_average)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-2">
+                    <h3 className="text-xs text-slate-100 font-semibold line-clamp-1">
+                      {movie.title}
+                    </h3>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </ScrollArea>
+      </section>
+
+      {/* ── Newsletter CTA ── */}
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="rounded-2xl bg-linear-to-r from-red-600 to-rose-700 p-8 text-white text-center">
+          <h2 className="text-3xl font-bold">Stay Updated</h2>
+          <p className="mt-2 text-white/80">
+            Get the latest reviews, trailers, and film essays delivered to your
+            inbox.
+          </p>
+          <form
+            className="mt-6 flex justify-center"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <div className="flex max-w-md w-full gap-2">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 bg-white/20 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white"
+              />
+              <Button
+                type="submit"
+                className="bg-white text-red-600 hover:bg-gray-100"
+              >
+                Subscribe
+              </Button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
   );
 }
