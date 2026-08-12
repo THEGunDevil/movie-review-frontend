@@ -10,6 +10,7 @@ import {
   ReviewWithMedia,
 } from "@/models/Review";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -80,9 +81,9 @@ export function useReviewInteractions() {
   const [commentSubmitting, setCommentSubmitting] = useState<
     Record<string, boolean>
   >({});
-  const [actionLoading, setActionLoading] = useState<
-    Record<string, boolean>
-  >({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>(
+    {},
+  );
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [editingReview, setEditingReview] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -116,14 +117,14 @@ export function useReviewInteractions() {
         setError(
           axiosErr.response?.data?.message ??
             axiosErr.message ??
-            "Something went wrong"
+            "Something went wrong",
         );
       } finally {
         setLoading(false);
       }
     },
     // api is now stable (module‑level), no need to depend on it
-    [search, mediaType, sort, ratingFilter, limit]
+    [search, mediaType, sort, ratingFilter, limit],
   );
 
   // refetch when page or filters change
@@ -149,38 +150,114 @@ export function useReviewInteractions() {
   const handleVote = async (reviewId: string, vote: "up" | "down") => {
     const review = reviewsData?.reviews.find((r) => r.id === reviewId);
     if (!review) return;
-    setActionLoading((prev) => ({ ...prev, [reviewId]: true }));
+    const prevVote = review.user_vote; // null, "up", or "down"
+    const isSame = prevVote === vote;
+
+    // ---- optimistic state update ----
+    setReviewsData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        reviews: prev.reviews.map((r) =>
+          r.id === reviewId
+            ? {
+                ...r,
+                user_vote: isSame ? null : vote,
+                upvotes:
+                  prevVote === "up"
+                    ? r.upvotes - 1
+                    : vote === "up"
+                      ? r.upvotes + 1
+                      : r.upvotes,
+                downvotes:
+                  prevVote === "down"
+                    ? r.downvotes - 1
+                    : vote === "down"
+                      ? r.downvotes + 1
+                      : r.downvotes,
+              }
+            : r,
+        ),
+      };
+    });
+
+    // ---- API call ----
     try {
-      if (review.user_vote === vote) {
+      if (isSame) {
         await api.delete(`/reviews/${reviewId}/vote`);
       } else {
         await api.post(`/reviews/${reviewId}/vote`, { vote });
       }
-      await fetchAllReviews(page);
     } catch (err) {
+      // revert on error
+      setReviewsData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          reviews: prev.reviews.map((r) =>
+            r.id === reviewId
+              ? {
+                  ...r,
+                  user_vote: prevVote,
+                  upvotes: review.upvotes, // revert to original
+                  downvotes: review.downvotes,
+                }
+              : r,
+          ),
+        };
+      });
       console.error("Vote failed:", err);
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [reviewId]: false }));
     }
   };
-
   // ── like ──
-  const handleLike = async (review: ReviewWithMedia) => {
-    setActionLoading((prev) => ({ ...prev, [review.id]: true }));
-    try {
-      if (review.user_liked) {
-        await api.delete(`/reviews/${review.id}/like`);
-      } else {
-        await api.post(`/reviews/${review.id}/like`);
-      }
-      await fetchAllReviews(page);
-    } catch (err) {
-      console.error("Like failed:", err);
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [review.id]: false }));
-    }
-  };
+const handleLike = async (review: ReviewWithMedia) => {
+  const prevLiked = review.user_liked;
+  const prevLikeCount = review.like_count;
 
+  // Optimistic UI update
+  setReviewsData((prev) => {
+    if (!prev) return prev;
+    return {
+      ...prev,
+      reviews: prev.reviews.map((r) =>
+        r.id === review.id
+          ? {
+              ...r,
+              user_liked: !prevLiked,
+              like_count: prevLiked ? prevLikeCount - 1 : prevLikeCount + 1,
+            }
+          : r
+      ),
+    };
+  });
+
+  try {
+    if (prevLiked) {
+      await api.delete(`/reviews/${review.id}/like`);
+    } else {
+      await api.post(`/reviews/${review.id}/like`);
+    }
+    // Do NOT call fetchAllReviews here – optimistic state is enough
+  } catch (err) {
+    // Revert on error
+    setReviewsData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        reviews: prev.reviews.map((r) =>
+          r.id === review.id
+            ? {
+                ...r,
+                user_liked: prevLiked,
+                like_count: prevLikeCount,
+              }
+            : r
+        ),
+      };
+    });
+    console.error("Like failed:", err);
+  }
+};
   // ── delete ──
   const handleDeleteReview = async (reviewId: string) => {
     if (!window.confirm("Delete this review?")) return;
@@ -217,7 +294,7 @@ export function useReviewInteractions() {
     try {
       const response = await api.patch<ReviewWithMedia>(
         `/reviews/${reviewId}`,
-        { content: editContent.trim() }
+        { content: editContent.trim() },
       );
       setReviewsData((prev) => {
         if (!prev) return prev;
@@ -230,7 +307,7 @@ export function useReviewInteractions() {
                   content: response.data.content,
                   updated_at: response.data.updated_at,
                 }
-              : r
+              : r,
           ),
         };
       });
@@ -265,7 +342,7 @@ export function useReviewInteractions() {
       setCommentsLoading((prev) => ({ ...prev, [reviewId]: true }));
       try {
         const res = await api.get<PaginatedComments>(
-          `/reviews/${reviewId}/comments`
+          `/reviews/${reviewId}/comments`,
         );
         setComments((prev) => ({
           ...prev,
@@ -278,34 +355,42 @@ export function useReviewInteractions() {
       }
     }
   };
-  const handleCommentSubmit = async (reviewId: string, text: string) => {
-    if (!text.trim()) return;
-    setCommentSubmitting((prev) => ({ ...prev, [reviewId]: true }));
-    try {
-      const res = await api.post<Review>(`/reviews/${reviewId}/comments`, {
-        content: text.trim(),
-      });
-      setComments((prev) => ({
+const handleCommentSubmit = async (reviewId: string, text: string) => {
+  if (!text.trim()) return;
+  setCommentSubmitting((prev) => ({ ...prev, [reviewId]: true }));
+  try {
+    // 1. Post the comment
+    await api.post(`/reviews/${reviewId}/comments`, {
+      content: text.trim(),
+    });
+
+    // 2. Fetch the updated comment list (with user details)
+    const res = await api.get<PaginatedComments>(
+      `/reviews/${reviewId}/comments`
+    );
+    setComments((prev) => ({
+      ...prev,
+      [reviewId]: res.data.comments,
+    }));
+
+    // 3. Update the comment count on the review card
+    setReviewsData((prev) => {
+      if (!prev) return prev;
+      return {
         ...prev,
-        [reviewId]: [...(prev[reviewId] ?? []), res.data],
-      }));
-      setReviewsData((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          reviews: prev.reviews.map((r) =>
-            r.id === reviewId
-              ? { ...r, comment_count: r.comment_count + 1 }
-              : r
-          ),
-        };
-      });
-    } catch (err) {
-      console.error("Comment failed:", err);
-    } finally {
-      setCommentSubmitting((prev) => ({ ...prev, [reviewId]: false }));
-    }
-  };
+        reviews: prev.reviews.map((r) =>
+          r.id === reviewId
+            ? { ...r, comment_count: r.comment_count + 1 }
+            : r
+        ),
+      };
+    });
+  } catch (err) {
+    console.error("Comment failed:", err);
+  } finally {
+    setCommentSubmitting((prev) => ({ ...prev, [reviewId]: false }));
+  }
+};
 
   return {
     // data

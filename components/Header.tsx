@@ -16,13 +16,14 @@ const navItems = [
   { href: "/tv", label: "TV Shows" },
   { href: "/reviews", label: "Reviews" },
 ];
+
 export function Header() {
   const { accessToken } = useAuth();
   const pathname = usePathname();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-
   const notificationsRef = useRef<HTMLDivElement>(null);
+
   const fetchNotifications = useCallback(async () => {
     try {
       const { data } = await axios.get<AppNotification[]>(
@@ -34,7 +35,6 @@ export function Header() {
     }
   }, []);
 
-  // Fetch on mount and set up polling (every 30 seconds)
   useEffect(() => {
     if (accessToken) {
       fetchNotifications();
@@ -42,7 +42,7 @@ export function Header() {
       return () => clearInterval(interval);
     }
   }, [accessToken, fetchNotifications]);
-  // Close dropdown when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -56,7 +56,7 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const unreadCount = notifications?.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
@@ -74,7 +74,6 @@ export function Header() {
           {navItems.map(({ href, label }) => {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
-
             return (
               <Link
                 key={href}
@@ -98,11 +97,11 @@ export function Header() {
               <div ref={notificationsRef} className="relative">
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                  className="relative cursor-pointer bor flex items-center"
+                  className="relative cursor-pointer flex items-center"
                   aria-label="Notifications"
                   aria-expanded={isNotificationsOpen}
                 >
-                  <Bell className="h-5! w-5! text-slate-100 hover:text-red-600" />
+                  <Bell className="h-5 w-5 text-slate-100 hover:text-red-600" />
                   {unreadCount > 0 && (
                     <span className="absolute right-2 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
                       {unreadCount}
@@ -129,7 +128,7 @@ export function Header() {
                           No notifications yet
                         </p>
                       ) : (
-                        notifications?.map((notif) => (
+                        notifications.map((notif) => (
                           <div
                             key={notif.id}
                             className="p-3 border-b border-slate-800/50 last:border-0 hover:bg-slate-800/30 transition-colors"
@@ -158,38 +157,33 @@ export function Header() {
                 )}
               </div>
 
-              {/* Desktop sign out button */}
-              {accessToken && (
-                <div className="hidden md:flex bg-rose-400/30 border border-red-500 rounded px-1.5 py-0.5 text-[8px] sm:text-[10px] font-mono font-semibold">
-                  <SignOutDialog
-                    trigger={
-                      <div className="flex items-center px-2 py-1.5 text-xs sm:text-sm text-rose-400 hover:text-rose-300 cursor-pointer rounded-sm">
-                        <LogOut className="w-4 h-4 sm:mr-2" />
-                        Sign Out
-                      </div>
-                    }
-                  />
-                </div>
-              )}
-              {/* Mobile sign out icon */}
-              {accessToken && (
+              {/* Desktop sign out */}
+              <div className="hidden md:flex bg-rose-400/30 border border-red-500 rounded px-1.5 py-0.5 text-[8px] sm:text-[10px] font-mono font-semibold">
                 <SignOutDialog
                   trigger={
-                    <div className="md:hidden border-l px-2  block items-center sm:text-sm text-rose-400 hover:text-rose-300 cursor-pointer">
-                      <LogOut className="w-5 h-5 sm:mr-2" />
+                    <div className="flex items-center px-2 py-1.5 text-xs sm:text-sm text-rose-400 hover:text-rose-300 cursor-pointer rounded-sm">
+                      <LogOut className="w-4 h-4 sm:mr-2" />
+                      Sign Out
                     </div>
                   }
                 />
-              )}
+              </div>
+
+              {/* Mobile sign out */}
+              <SignOutDialog
+                trigger={
+                  <div className="md:hidden border-l px-2 block text-rose-400 hover:text-rose-300 cursor-pointer">
+                    <LogOut className="w-5 h-5" />
+                  </div>
+                }
+              />
             </div>
           ) : (
-              <>{
-                
-            }
+            <>
               {pathname === "/authentication/signup" ? (
                 <Link
-                    href="/authentication/signin"
-                    className={`md:bg-cyan-400/10 md:border md:border-cyan-400/30 rounded md:px-1.5 md:py-0.5 text-[8px] md:text-[10px] font-mono font-semibold`}
+                  href="/authentication/signin"
+                  className="md:bg-cyan-400/10 md:border md:border-cyan-400/30 rounded md:px-1.5 md:py-0.5 text-[8px] md:text-[10px] font-mono font-semibold"
                 >
                   <div className="flex items-center md:px-2 md:py-1.5 text-xs sm:text-sm text-rose-400 hover:text-rose-300 cursor-pointer rounded-sm">
                     <LogIn className="w-4 h-4 sm:mr-2 mr-1" /> Sign In
@@ -198,7 +192,7 @@ export function Header() {
               ) : (
                 <Link
                   href="/authentication/signup"
-                    className={`md:bg-cyan-400/10 md:border md:border-cyan-400/30 rounded md:px-1.5 md:py-0.5 text-[8px] md:text-[10px] font-mono font-semibold`}
+                  className="md:bg-cyan-400/10 md:border md:border-cyan-400/30 rounded md:px-1.5 md:py-0.5 text-[8px] md:text-[10px] font-mono font-semibold"
                 >
                   <div className="flex items-center px-2 py-1.5 text-xs sm:text-sm text-rose-400 hover:text-rose-300 cursor-pointer rounded-sm">
                     <UserPlus className="w-4 h-4 sm:mr-2 mr-1" /> Sign Up

@@ -68,7 +68,10 @@ export default function SignupPage() {
         });
       }, 1000);
     } catch (error: any) {
-      console.error("❌ Registration failed:", error.response?.data || error.message);
+      console.error(
+        "❌ Registration failed:",
+        error.response?.data || error.message,
+      );
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -95,7 +98,10 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Username Field */}
         <div className="space-y-1.5">
-          <Label htmlFor="username" className="font-mono text-xs text-slate-400">
+          <Label
+            htmlFor="username"
+            className="font-mono text-xs text-slate-400"
+          >
             Username
           </Label>
           <Input
@@ -103,8 +109,14 @@ export default function SignupPage() {
             placeholder="JaneDoe"
             {...register("user_name", {
               required: "Username is required",
-              minLength: { value: 3, message: "Username must be at least 3 characters" },
-              maxLength: { value: 30, message: "Username must be less than 30 characters" },
+              minLength: {
+                value: 3,
+                message: "Username must be at least 3 characters",
+              },
+              maxLength: {
+                value: 30,
+                message: "Username must be less than 30 characters",
+              },
               pattern: {
                 value: /^[a-zA-Z0-9_]+$/,
                 message: "Only letters, numbers, and underscores allowed",
@@ -152,7 +164,10 @@ export default function SignupPage() {
 
         {/* Password Field */}
         <div className="space-y-1.5">
-          <Label htmlFor="password" className="font-mono text-xs text-slate-400">
+          <Label
+            htmlFor="password"
+            className="font-mono text-xs text-slate-400"
+          >
             Password
           </Label>
           <div className="relative">
@@ -162,16 +177,28 @@ export default function SignupPage() {
               placeholder="••••••••"
               {...register("password", {
                 required: "Password is required",
-                minLength: { value: 8, message: "Password must be at least 8 characters" },
+                minLength: {
+                  value: 8,
+                  message: "Password must be at least 8 characters",
+                },
                 validate: {
                   hasNumber: (value) =>
                     /\d/.test(value) || "Must contain at least one number",
                   hasUppercase: (value) =>
-                    /[A-Z]/.test(value) || "Must contain at least one uppercase letter",
+                    /[A-Z]/.test(value) ||
+                    "Must contain at least one uppercase letter",
                 },
               })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  document.getElementById("confirmPassword")?.focus();
+                }
+              }}
               className={`bg-slate-900/60 border-slate-700/60 text-slate-200 font-mono text-sm pr-10 ${
-                errors.password ? "border-rose-500/50 focus:border-rose-500" : ""
+                errors.password
+                  ? "border-rose-500/50 focus:border-rose-500"
+                  : ""
               }`}
             />
             <button
@@ -179,7 +206,11 @@ export default function SignupPage() {
               onClick={() => setShowPassword((s) => !s)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400 transition-colors"
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
             </button>
           </div>
 
@@ -236,17 +267,22 @@ export default function SignupPage() {
 
         {/* Confirm Password Field */}
         <div className="space-y-1.5">
-          <Label htmlFor="confirm_password" className="font-mono text-xs text-slate-400">
+          <Label
+            htmlFor="confirmPassword"
+            className="font-mono text-xs text-slate-400"
+          >
             Confirm Password
           </Label>
           <div className="relative">
             <Input
-              id="confirm_password"
+              id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="••••••••"
               {...register("confirm_password", {
+                // ✅ ঠিক নাম
                 required: "Please confirm your password",
-                validate: (value) => value === password || "Passwords do not match",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
               })}
               className={`bg-slate-900/60 border-slate-700/60 text-slate-200 font-mono text-sm pr-10 ${
                 errors.confirm_password
@@ -261,7 +297,11 @@ export default function SignupPage() {
               onClick={() => setShowConfirmPassword((s) => !s)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400 transition-colors"
             >
-              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showConfirmPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
             </button>
           </div>
           {errors.confirm_password && (

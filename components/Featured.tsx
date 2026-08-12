@@ -20,7 +20,7 @@ export default function FeaturedReview({ movie }: { movie: Movie }) {
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-8 lg:py-16">
         {/* ── Right: Poster + Overlay ── */}
         {movie.poster_path ? (
-
+          <div>
             <Image
               src={`https://image.tmdb.org/t/p/w780${movie.poster_path}`}
               alt={movie.title}
@@ -29,6 +29,7 @@ export default function FeaturedReview({ movie }: { movie: Movie }) {
               fill
               priority
             />
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-slate-800 text-slate-600">
             <Film className="h-16 w-16" />

@@ -88,7 +88,6 @@ export function ReviewHeader({
             <Badge variant="secondary" className="bg-slate-800 text-[9px] text-slate-400">
               {review.media_type.toUpperCase()}
             </Badge>
-            <span className="hidden sm:inline">•</span>
             <Link
               href={`/users/${review.user_id}`}
               className="flex items-center gap-1.5 hover:text-slate-300"

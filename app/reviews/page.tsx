@@ -27,7 +27,7 @@ export default function ReviewsPage() {
         ))}
       </div>
     );
-  }
+  }  
   return (
     <main className="min-h-screen grid md:grid-cols-2 grid-cols-1 gap-3 mx-auto bg-slate-950 px-4 py-8 sm:px-6 lg:px-8">
       <aside>

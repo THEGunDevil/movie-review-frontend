@@ -9,6 +9,7 @@ interface CommentItemProps {
 }
 
 export function CommentItem({ comment }: CommentItemProps) {
+  
   return (
     <div className="flex gap-3">
       {comment.profile_picture ? (
