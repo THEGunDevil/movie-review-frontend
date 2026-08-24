@@ -4,8 +4,8 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 interface VoteControlsProps {
   review: {
     id: string;
-    upvotes: number;
-    downvotes: number;
+    upvotes?: number; // now optional
+    downvotes?: number; // now optional
     user_vote: "up" | "down" | null;
     user_id: string;
   };
@@ -14,9 +14,12 @@ interface VoteControlsProps {
 }
 
 export function VoteControls({ review, onVote, disabled }: VoteControlsProps) {
-  const netVotes = review.upvotes - review.downvotes;
+  const upvotes = Number(review.upvotes ?? 0);
+  const downvotes = Number(review.downvotes ?? 0);
+  const netVotes = upvotes - downvotes;
   const { userID } = useAuth();
   const isDisabled = disabled || review.user_id === userID;
+  console.log(review.user_vote);
 
   return (
     <div className="flex sm:flex-col items-center sm:justify-start justify-center gap-1 px-3 py-2 sm:py-4 sm:px-4">

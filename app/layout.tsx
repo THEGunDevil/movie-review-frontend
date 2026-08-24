@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Framewise Reviews | Film Criticism Portfolio",
+  title: "CineCritic Reviews | Film Criticism Portfolio",
   description:
     "A polished movie review portfolio built with Next.js, TypeScript, Tailwind CSS, and shadcn UI.",
 };
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         inter.variable,
       )}
     >
-      <body className="flex min-h-full flex-col bg-slate-950">
+      <body className="flex flex-col bg-slate-950">
         <AuthProvider>
           <TooltipProvider>
             <Header />

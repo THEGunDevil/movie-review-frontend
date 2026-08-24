@@ -4,16 +4,16 @@ import { Card, CardContent } from "./ui/card";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Film, Play, Star } from "lucide-react";
-import { Genre, Movie } from "@/models/movie";
+import { Genre, Movie } from "@/models/Movie";
 import { useMovies } from "@/hooks/useMovies";
 import { getGenreName } from "@/lib/helpers";
 import { useEffect } from "react";
 function MovieCard({ movie }: { movie: Movie }) {
-  const { genreData, fetchGenres } = useMovies()
+  const { genreData, fetchGenres } = useMovies();
   useEffect(() => {
-    fetchGenres()
-  },[fetchGenres])
-  const genres: Genre[] = genreData?.data  
+    fetchGenres();
+  }, [fetchGenres]);
+  const genres: Genre[] = genreData?.data;
   return (
     <Link href={`/movies/${movie.id}`}>
       <Card className="group relative h-full overflow-hidden border-slate-800 bg-slate-900/60 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10">
@@ -60,7 +60,7 @@ function MovieCard({ movie }: { movie: Movie }) {
           <div className="mt-3 flex flex-wrap gap-1">
             {movie?.genre_ids?.map((gid: number) => (
               <Badge key={gid} variant="secondary" className="text-[10px]">
-                {getGenreName(gid,genres)}
+                {getGenreName(gid, genres)}
               </Badge>
             ))}
           </div>

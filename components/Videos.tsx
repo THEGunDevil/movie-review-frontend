@@ -1,8 +1,7 @@
-
 "use client";
 
 import { formatDate } from "@/lib/format";
-import { MovieVideo, VideoType } from "@/models/movie";
+import { MovieVideo, VideoType } from "@/models/Movie";
 import { Film, Play, Sparkles } from "lucide-react";
 import Pagination from "./pagination";
 
@@ -57,8 +56,7 @@ function Videos({
 
             {/* Total videos */}
             <div className="hidden shrink-0 rounded-full border border-slate-700 bg-slate-950/60 px-3 py-1.5 text-xs font-semibold text-slate-400 sm:block">
-              {totalVideos}{" "}
-              {totalVideos === 1 ? "video" : "videos"}
+              {totalVideos} {totalVideos === 1 ? "video" : "videos"}
             </div>
           </div>
 
@@ -199,9 +197,7 @@ function Videos({
                 <div className="mb-4 flex items-center justify-between text-xs text-slate-500">
                   <span>
                     Page{" "}
-                    <span className="font-semibold text-slate-300">
-                      {page}
-                    </span>{" "}
+                    <span className="font-semibold text-slate-300">{page}</span>{" "}
                     of{" "}
                     <span className="font-semibold text-slate-300">
                       {totalPages}
@@ -209,8 +205,7 @@ function Videos({
                   </span>
 
                   <span>
-                    {totalVideos} total{" "}
-                    {totalVideos === 1 ? "video" : "videos"}
+                    {totalVideos} total {totalVideos === 1 ? "video" : "videos"}
                   </span>
                 </div>
 
@@ -238,8 +233,8 @@ function Videos({
             </h3>
 
             <p className="mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
-              There are no {videoType}s available for this movie right now.
-              Try switching to the other video type.
+              There are no {videoType}s available for this movie right now. Try
+              switching to the other video type.
             </p>
           </div>
         )}

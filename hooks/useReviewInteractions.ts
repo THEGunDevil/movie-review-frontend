@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import axios, { AxiosError } from "axios";
-import { ErrorResponse } from "@/models/user";
+import { ErrorResponse } from "@/models/User";
 import {
   PaginatedComments,
   PaginatedReviews,
@@ -10,7 +10,6 @@ import {
   ReviewWithMedia,
 } from "@/models/Review";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -124,7 +123,7 @@ export function useReviewInteractions() {
       }
     },
     // api is now stable (module‑level), no need to depend on it
-    [search, mediaType, sort, ratingFilter, limit],
+    [search, mediaType, sort, ratingFilter],
   );
 
   // refetch when page or filters change
@@ -210,36 +209,11 @@ export function useReviewInteractions() {
     }
   };
   // ── like ──
-const handleLike = async (review: ReviewWithMedia) => {
-  const prevLiked = review.user_liked;
-  const prevLikeCount = review.like_count;
+  const handleLike = async (review: ReviewWithMedia) => {
+    const prevLiked = review.user_liked;
+    const prevLikeCount = review.like_count;
 
-  // Optimistic UI update
-  setReviewsData((prev) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      reviews: prev.reviews.map((r) =>
-        r.id === review.id
-          ? {
-              ...r,
-              user_liked: !prevLiked,
-              like_count: prevLiked ? prevLikeCount - 1 : prevLikeCount + 1,
-            }
-          : r
-      ),
-    };
-  });
-
-  try {
-    if (prevLiked) {
-      await api.delete(`/reviews/${review.id}/like`);
-    } else {
-      await api.post(`/reviews/${review.id}/like`);
-    }
-    // Do NOT call fetchAllReviews here – optimistic state is enough
-  } catch (err) {
-    // Revert on error
+    // Optimistic UI update
     setReviewsData((prev) => {
       if (!prev) return prev;
       return {
@@ -248,16 +222,41 @@ const handleLike = async (review: ReviewWithMedia) => {
           r.id === review.id
             ? {
                 ...r,
-                user_liked: prevLiked,
-                like_count: prevLikeCount,
+                user_liked: !prevLiked,
+                like_count: prevLiked ? prevLikeCount - 1 : prevLikeCount + 1,
               }
-            : r
+            : r,
         ),
       };
     });
-    console.error("Like failed:", err);
-  }
-};
+
+    try {
+      if (prevLiked) {
+        await api.delete(`/reviews/${review.id}/like`);
+      } else {
+        await api.post(`/reviews/${review.id}/like`);
+      }
+      // Do NOT call fetchAllReviews here – optimistic state is enough
+    } catch (err) {
+      // Revert on error
+      setReviewsData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          reviews: prev.reviews.map((r) =>
+            r.id === review.id
+              ? {
+                  ...r,
+                  user_liked: prevLiked,
+                  like_count: prevLikeCount,
+                }
+              : r,
+          ),
+        };
+      });
+      console.error("Like failed:", err);
+    }
+  };
   // ── delete ──
   const handleDeleteReview = async (reviewId: string) => {
     if (!window.confirm("Delete this review?")) return;
@@ -355,42 +354,42 @@ const handleLike = async (review: ReviewWithMedia) => {
       }
     }
   };
-const handleCommentSubmit = async (reviewId: string, text: string) => {
-  if (!text.trim()) return;
-  setCommentSubmitting((prev) => ({ ...prev, [reviewId]: true }));
-  try {
-    // 1. Post the comment
-    await api.post(`/reviews/${reviewId}/comments`, {
-      content: text.trim(),
-    });
+  const handleCommentSubmit = async (reviewId: string, text: string) => {
+    if (!text.trim()) return;
+    setCommentSubmitting((prev) => ({ ...prev, [reviewId]: true }));
+    try {
+      // 1. Post the comment
+      await api.post(`/reviews/${reviewId}/comments`, {
+        content: text.trim(),
+      });
 
-    // 2. Fetch the updated comment list (with user details)
-    const res = await api.get<PaginatedComments>(
-      `/reviews/${reviewId}/comments`
-    );
-    setComments((prev) => ({
-      ...prev,
-      [reviewId]: res.data.comments,
-    }));
-
-    // 3. Update the comment count on the review card
-    setReviewsData((prev) => {
-      if (!prev) return prev;
-      return {
+      // 2. Fetch the updated comment list (with user details)
+      const res = await api.get<PaginatedComments>(
+        `/reviews/${reviewId}/comments`,
+      );
+      setComments((prev) => ({
         ...prev,
-        reviews: prev.reviews.map((r) =>
-          r.id === reviewId
-            ? { ...r, comment_count: r.comment_count + 1 }
-            : r
-        ),
-      };
-    });
-  } catch (err) {
-    console.error("Comment failed:", err);
-  } finally {
-    setCommentSubmitting((prev) => ({ ...prev, [reviewId]: false }));
-  }
-};
+        [reviewId]: res.data.comments,
+      }));
+
+      // 3. Update the comment count on the review card
+      setReviewsData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          reviews: prev.reviews.map((r) =>
+            r.id === reviewId
+              ? { ...r, comment_count: r.comment_count + 1 }
+              : r,
+          ),
+        };
+      });
+    } catch (err) {
+      console.error("Comment failed:", err);
+    } finally {
+      setCommentSubmitting((prev) => ({ ...prev, [reviewId]: false }));
+    }
+  };
 
   return {
     // data

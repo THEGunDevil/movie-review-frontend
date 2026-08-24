@@ -1,5 +1,5 @@
-import { Person } from "@/models/movie";
-import { ErrorResponse } from "@/models/user";
+import { Person } from "@/models/Movie";
+import { ErrorResponse } from "@/models/User";
 import axios, { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 

@@ -18,6 +18,8 @@ export interface PaginatedReviewResponse<R = Review> {
   total_reviews: number;
   reviews: R[];
 }
+
+
 export type MediaType = "movie" | "tv";
 export type VoteType = "up" | "down" | null;
 export type SortType = "newest" | "popular" | "discussed" | "highest_rated";

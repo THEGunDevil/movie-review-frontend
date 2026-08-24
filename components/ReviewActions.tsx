@@ -23,7 +23,7 @@ export function ReviewActions({
   commentsExpanded,
 }: ReviewActionsProps) {
   const formatCount = (count: number) =>
-    count >= 1000 ? `${(count / 1000).toFixed(1)}K` : count.toString();
+    count >= 1000 ? `${(count / 1000).toFixed(1)}K` : count?.toString();
 
   return (
     <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-800/60 pt-4 sm:gap-x-5">

@@ -10,7 +10,7 @@ import {
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { useUserData } from "@/hooks/userUserData";
-import { AuthContextType, JwtPayload, User } from "@/models/user";
+import { AuthContextType, JwtPayload, User } from "@/models/User";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditType, MovieCredit } from "@/models/movie";
+import { CreditType, MovieCredit } from "@/models/Movie";
 import { Users, BriefcaseBusiness } from "lucide-react";
 import Image from "next/image";
 import Pagination from "./pagination";

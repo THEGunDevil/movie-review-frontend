@@ -2,12 +2,8 @@
 
 import { useState, useCallback, useEffect } from "react";
 import axios, { AxiosError } from "axios";
-import {
-  Genre,
-  Movie,
-  PaginatedMovieResponse,
-} from "@/models/movie";
-import { ErrorResponse } from "@/models/user";
+import { Genre, Movie, PaginatedMovieResponse } from "@/models/Movie";
+import { ErrorResponse } from "@/models/User";
 import { GoToPage } from "@/lib/helpers";
 export function useMovies() {
   const [movieData, setMovieData] = useState<{
@@ -56,7 +52,7 @@ export function useMovies() {
     loading: false,
     error: null,
   });
-  const {page} = GoToPage()
+  const { page } = GoToPage();
   const limit = 30;
   const fetchSearchResults = useCallback(
     async (query: string, pageNum?: number) => {

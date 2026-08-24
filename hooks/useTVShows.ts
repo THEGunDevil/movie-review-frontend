@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import axios, { AxiosError } from "axios";
-import { ErrorResponse } from "@/models/user";
+import { ErrorResponse } from "@/models/User";
 import { PaginatedTVShowsResponse, TVShow } from "@/models/TVShow";
 import { GoToPage } from "@/lib/helpers";
 
@@ -42,7 +42,7 @@ export function useTVShows() {
       try {
         const response = await axios.get<PaginatedTVShowsResponse<TVShow>>(
           `${process.env.NEXT_PUBLIC_API_URL}/tv_shows/search`,
-          { params: { q: query, page: currentPage, limit } }
+          { params: { q: query, page: currentPage, limit } },
         );
         setSearchData({ data: response.data, loading: false, error: null });
       } catch (err) {
@@ -54,7 +54,7 @@ export function useTVShows() {
         });
       }
     },
-    []
+    [],
   );
 
   // ✅ Fetch all TV shows
@@ -65,17 +65,19 @@ export function useTVShows() {
       try {
         const response = await axios.get<PaginatedTVShowsResponse<TVShow>>(
           `${process.env.NEXT_PUBLIC_API_URL}/tv_shows`,
-          { params: { page: currentPage, limit } }
+          { params: { page: currentPage, limit } },
         );
         setTVShowsData({ data: response.data, loading: false, error: null });
       } catch (err) {
         const axiosErr = err as AxiosError<ErrorResponse>;
         const message =
-          axiosErr.response?.data?.message ?? axiosErr.message ?? "Something went wrong";
+          axiosErr.response?.data?.message ??
+          axiosErr.message ??
+          "Something went wrong";
         setTVShowsData({ data: null, loading: false, error: message });
       }
     },
-    [page, limit]
+    [page, limit],
   );
 
   // ✅ Fetch single TV show
@@ -83,13 +85,15 @@ export function useTVShows() {
     setSingleTVShowData((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const response = await axios.get<TVShow>(
-        `${process.env.NEXT_PUBLIC_API_URL}/tv_shows/tv_show/${id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/tv_shows/tv_show/${id}`,
       );
       setSingleTVShowData((prev) => ({ ...prev, data: response.data }));
     } catch (err) {
       const axiosErr = err as AxiosError<ErrorResponse>;
       const message =
-        axiosErr.response?.data?.message ?? axiosErr.message ?? "Something went wrong";
+        axiosErr.response?.data?.message ??
+        axiosErr.message ??
+        "Something went wrong";
       setSingleTVShowData((prev) => ({ ...prev, error: message }));
     } finally {
       setSingleTVShowData((prev) => ({ ...prev, loading: false }));
@@ -104,17 +108,23 @@ export function useTVShows() {
       try {
         const response = await axios.get<PaginatedTVShowsResponse<TVShow>>(
           `${process.env.NEXT_PUBLIC_API_URL}/tv_shows/genre/${genreId}`,
-          { params: { page: currentPage, limit } }
+          { params: { page: currentPage, limit } },
         );
-        setGenreTVShowsData({ data: response.data, loading: false, error: null });
+        setGenreTVShowsData({
+          data: response.data,
+          loading: false,
+          error: null,
+        });
       } catch (err) {
         const axiosErr = err as AxiosError<ErrorResponse>;
         const message =
-          axiosErr.response?.data?.message ?? axiosErr.message ?? "Something went wrong";
+          axiosErr.response?.data?.message ??
+          axiosErr.message ??
+          "Something went wrong";
         setGenreTVShowsData({ data: null, loading: false, error: message });
       }
     },
-    [limit]
+    [limit],
   );
 
   return {

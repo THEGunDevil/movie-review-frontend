@@ -47,7 +47,7 @@ export default function FilterBar({
             onClick={onSearchSubmit}
             className="p-5 text-sm font-medium text-white bg-transparent transition-colors"
           >
-            <Search className="h-5! w-5!"/>
+            <Search className="h-5! w-5!" />
           </Button>
         </div>
 

@@ -1,4 +1,4 @@
-import { MovieVideo, PaginatedVideoResponse, VideoType } from "@/models/movie";
+import { MovieVideo, PaginatedVideoResponse, VideoType } from "@/models/Movie";
 import axios, { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 

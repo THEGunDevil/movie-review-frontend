@@ -57,11 +57,13 @@ export function ReviewCard({
   onCommentSubmit,
   disabled,
 }: ReviewCardProps) {
-  const {userID} = useAuth()
+  const { userID } = useAuth();
+  
   return (
-    <article className={`group overflow-hidden rounded-2xl border ${userID === review.user_id ? "border-emerald-800 border-2" : "bg-slate-900/40"}  bg-slate-900/40 shadow-lg transition hover:border-slate-700 hover:bg-slate-900/60`}>
+    <article
+      className={`group overflow-hidden rounded-2xl border ${userID === review.user_id ? "border-pink-800 border-2" : "bg-slate-900/40 border-slate-800 border-2"}  bg-slate-900/40 shadow-lg transition hover:bg-slate-900/60`}
+    >
       <div className="flex flex-col sm:flex-row">
-        {/* ভোট কন্ট্রোল – মোবাইলে উপরে, ডেস্কটপে পাশে */}
         <div className="sm:border-r border-slate-800/70">
           <VoteControls review={review} onVote={onVote} disabled={disabled} />
         </div>

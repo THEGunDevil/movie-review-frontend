@@ -14,16 +14,16 @@ import type {
   PaginatedVideoResponse,
   SingleMovieResponse,
   VideoType,
-} from "@/models/movie";
+} from "@/models/Movie";
 import Videos from "@/components/Videos";
 import { formatDate } from "@/lib/format";
 import Credits from "@/components/Credits";
-import ReviewCom from "@/components/AddReviewCom";
 import Reviews from "@/components/Reviews";
 import MovieInfo from "@/components/MovieInfo";
 import { ReviewProvider, useReviews } from "@/context/ReviewContext";
 import AddReviewCom from "@/components/AddReviewCom";
 import { GoToPage } from "@/lib/helpers";
+import Loading from "@/components/Loading";
 
 type MoviePayload = Movie | SingleMovieResponse;
 type VideoPayload = PaginatedVideoResponse<MovieVideo>;
@@ -46,7 +46,7 @@ function getGenres(movie: Movie | null): Genre[] {
   if (movie.genres?.length) return movie.genres;
   return (movie.genre_ids ?? []).map((id) => ({
     id,
-    name:`Genre ${id}`,
+    name: `Genre ${id}`,
   }));
 }
 
@@ -115,7 +115,7 @@ function MovieDetailsContent() {
     () => videoList.find((v) => v.id === activeVideoId) ?? defaultVideo ?? null,
     [activeVideoId, defaultVideo, videoList],
   );
-  const { creditsData, fetchCredits } = useCredits();
+  const { creditsData, fetchMovieCredits } = useCredits();
   const genres = useMemo(() => getGenres(movie), [movie]);
   const { page, goToPage } = GoToPage();
   const { page: videoPage, goToPage: goToVideoPage } = GoToPage();
@@ -139,8 +139,8 @@ function MovieDetailsContent() {
     if (!id) return;
     const movieID = Number(id);
     if (Number.isNaN(movieID)) return;
-    fetchCredits(movieID, creditType, page);
-  }, [id, creditType, page, fetchCredits]);
+    fetchMovieCredits(movieID, creditType, page);
+  }, [id, creditType, page, fetchMovieCredits]);
 
   useEffect(() => {
     if (!id) return;
@@ -149,10 +149,7 @@ function MovieDetailsContent() {
 
   const totalCreditPages = creditsData?.data?.total_pages;
   const isLoading =
-    singleMovieData?.loading ||
-    creditsData?.loading ||
-    videoData?.loading ||
-    reviewData?.loading;
+    singleMovieData?.loading || creditsData?.loading || reviewData?.loading;
   const error =
     singleMovieData?.error ||
     creditsData?.error ||
@@ -169,7 +166,7 @@ function MovieDetailsContent() {
       setActiveVideoId(defaultVideo?.id ?? videoList[0].id);
     }
   }, [activeVideoId, defaultVideo?.id, videoList]);
-  const addReview = (e: React.FormEvent<HTMLFormElement>) => {
+  const addReview = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Call the context's handleAddReview directly (it already prevents default internally,
     // but we need to call it with the correct parameters)
@@ -188,16 +185,7 @@ function MovieDetailsContent() {
   }
 
   if (isLoading || !movie) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 px-4 text-slate-100">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-red-500" />
-          <p className="text-sm font-medium text-slate-400">
-            Loading movie experience...
-          </p>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (

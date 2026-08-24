@@ -16,7 +16,7 @@ import { ReviewCardSkeleton } from "@/components/ReviewCardSkeleton";
 export default function ReviewsPage() {
   const h = useReviewInteractions();
 
-  if (h.loading && !h.reviewsData) return <LoadingState />;
+  if (h.loading && !h.reviewsData) return <LoadingState state="reviews" />;
   if (h.error && !h.reviewsData)
     return <ErrorState message={h.error} onRetry={() => h.applyFilters()} />;
   if (h.loading && !h.reviewsData) {
@@ -35,7 +35,6 @@ export default function ReviewsPage() {
         <TopReviewBanner period="month" />{" "}
       </aside>
       <div className="mx-auto max-w-4xl">
-        {/* হেডার */}
         <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="bg-linear-to-r from-white via-slate-200 to-slate-500 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-4xl">
@@ -52,7 +51,6 @@ export default function ReviewsPage() {
           </Link>
         </div>
 
-        {/* ফিল্টার */}
         <FilterBar
           search={h.search}
           onSearchChange={h.setSearch}
@@ -67,7 +65,6 @@ export default function ReviewsPage() {
           hasFilters={h.hasFilters}
         />
 
-        {/* রিভিউ লিস্ট */}
         {h.reviews.length === 0 ? (
           <EmptyState onClearFilters={h.clearFilters} />
         ) : (

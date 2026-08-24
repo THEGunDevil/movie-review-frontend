@@ -7,7 +7,7 @@ import { Film, Play, Star } from "lucide-react";
 import { TVShow } from "@/models/TVShow"; // adjust import path
 import { useEffect } from "react";
 import { useMovies } from "@/hooks/useMovies";
-import { Genre } from "@/models/movie";
+import { Genre } from "@/models/Movie";
 import { getGenreName } from "@/lib/helpers";
 
 function TVShowCard({ show }: { show: TVShow }) {
@@ -62,7 +62,7 @@ function TVShowCard({ show }: { show: TVShow }) {
           <div className="mt-3 flex flex-wrap gap-1">
             {show.genre_ids?.slice(0, 2).map((gid: number) => (
               <Badge key={gid} variant="secondary" className="text-[10px]">
-                {getGenreName(gid,genres)}
+                {getGenreName(gid, genres)}
               </Badge>
             ))}
           </div>

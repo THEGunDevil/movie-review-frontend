@@ -85,8 +85,11 @@ export function ReviewHeader({
             {review.media_title}
           </Link>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-            <Badge variant="secondary" className="bg-slate-800 text-[9px] text-slate-400">
-              {review.media_type.toUpperCase()}
+            <Badge
+              variant="secondary"
+              className="bg-slate-800 text-[9px] text-slate-400"
+            >
+              {review.media_type?.toUpperCase()}
             </Badge>
             <Link
               href={`/users/${review.user_id}`}
@@ -144,13 +147,19 @@ export function ReviewHeader({
               {isOwner ? (
                 <>
                   <button
-                    onClick={() => { onEdit(); onMenuToggle(review.id); }}
+                    onClick={() => {
+                      onEdit();
+                      onMenuToggle(review.id);
+                    }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                   >
                     <Pencil className="h-3.5 w-3.5" /> Edit
                   </button>
                   <button
-                    onClick={() => { onDelete(); onMenuToggle(review.id); }}
+                    onClick={() => {
+                      onDelete();
+                      onMenuToggle(review.id);
+                    }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-red-400 hover:bg-red-500/10"
                   >
                     <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -158,7 +167,10 @@ export function ReviewHeader({
                 </>
               ) : (
                 <button
-                  onClick={() => { onReport(); onMenuToggle(review.id); }}
+                  onClick={() => {
+                    onReport();
+                    onMenuToggle(review.id);
+                  }}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 >
                   <Flag className="h-3.5 w-3.5" /> Report

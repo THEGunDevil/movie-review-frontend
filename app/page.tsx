@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Star, Search, ChevronRight, Film } from "lucide-react";
+import { Star, ChevronRight, Film } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Movie, Genre } from "@/models/movie";
+import { Movie, Genre } from "@/models/Movie";
 import { useMovies } from "@/hooks/useMovies";
 import Image from "next/image";
 import FeaturedReview from "@/components/Featured";
@@ -13,9 +13,11 @@ import Pagination from "@/components/pagination";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import Loader from "@/components/Loader";
-import { useRouter } from "next/navigation";
 import { getGenreName } from "@/lib/helpers";
+import SearchBar from "@/components/SearchBar";
+import axios, { AxiosError } from "axios";
+import { ErrorResponse } from "@/models/User";
+import Loading from "@/components/Loading";
 
 // Helper functions
 const formatRating = (rating: number | undefined | null): string => {
@@ -28,9 +30,11 @@ const getReleaseYear = (dateString: string | undefined | null): string => {
   const date = new Date(dateString);
   return isNaN(date.getTime()) ? "TBA" : String(date.getFullYear());
 };
+export interface FeaturedMovies {
+  results: Movie[];
+}
 
 export default function HomePage() {
-  const router = useRouter();
   const {
     movieData,
     genreData,
@@ -43,61 +47,81 @@ export default function HomePage() {
 
   const movies = movieData?.data?.movies ?? [];
   const totalPages = movieData?.data?.total_pages ?? 1;
-
-  const [search, setSearch] = useState("");
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-
-  const featured = movies.slice(0, 3);
   const genres: Genre[] = genreData?.data ?? [];
   const popularMovies: Movie[] = movies.slice(3, 21);
   const genreMovies: Movie[] = genreMoviesData?.data?.movies ?? [];
   const [showPopular, setShowPopular] = useState<boolean>(true);
+  const [topMovies, setTopMovies] = useState<{
+    data: Movie[] | [];
+    loading: boolean;
+    error: string | null;
+  }>({
+    data: [],
+    loading: true,
+    error: null,
+  });
   const displayedMovies = showPopular ? popularMovies : genreMovies;
 
   // Initial fetch
   useEffect(() => {
     fetchMovies(page);
     fetchGenres();
-  }, [page]);
+  }, [page, fetchMovies, fetchGenres]);
+
+  const fetchTopMovies = async () => {
+    setTopMovies((prev) => ({
+      ...prev,
+      loading: true,
+      error: null,
+    }));
+
+    try {
+      const { data } = await axios.get<FeaturedMovies>(
+        `${process.env.NEXT_PUBLIC_API_URL}/movies/top_movies`,
+      );
+      setTopMovies((prev) => ({
+        ...prev,
+        data: data.results,
+      }));
+    } catch (err) {
+      const axiosErr = err as AxiosError<ErrorResponse>;
+      const message =
+        axiosErr.response?.data?.message ??
+        axiosErr.message ??
+        "Something went wrong";
+      setTopMovies((prev) => ({
+        ...prev,
+        error: message,
+      }));
+    } finally {
+      setTopMovies((prev) => ({
+        ...prev,
+        loading: false,
+      }));
+    }
+  };
+  useEffect(() => {
+    fetchTopMovies();
+  }, []);
 
   const handleLatestReviews = (id: number) => {
     if (isNaN(id) || !id) return;
     setShowPopular(false);
     fetchGenreMovies(page, id);
   };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!search.trim()) return;
-
-    setSearchLoading(true);
-    setSearchError(null);
-    try {
-      router.push(`/movies?search=${encodeURIComponent(search.trim())}`);
-    } catch (error) {
-      console.error("Search failed:", error);
-      setSearchError("Search failed. Please try again.");
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
   const goToPage = (newPage: number) => {
     fetchMovies(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Loading state
-  if (movieData.loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <Loader />
-          <p className="text-white mt-4">Loading movies...</p>
-        </div>
-      </div>
-    );
+  if (
+    movieData.loading ||
+    topMovies.loading ||
+    genreData.loading ||
+    genreMoviesData.loading
+  ) {
+    return <Loading />;
   }
 
   // Error state
@@ -134,29 +158,12 @@ export default function HomePage() {
           </p>
 
           {/* Search Bar */}
-          <form
-            onSubmit={handleSearch}
-            className="mx-auto mt-8 flex max-w-md items-center gap-2 rounded-full border border-slate-700 bg-slate-800/50 px-5 py-3 text-slate-400 backdrop-blur-sm"
-          >
-            <Search className="h-4 w-4" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search movies..."
-              className="w-full bg-transparent px-3 text-sm text-slate-200 outline-none border-0 placeholder:text-slate-600"
-            />
-            {searchLoading && (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
-            )}
-          </form>
-          {searchError && (
-            <p className="mt-2 text-sm text-red-400">{searchError}</p>
-          )}
+          <SearchBar />
         </div>
 
         {/* Hero Carousel */}
         <div className="grid gap-6 md:grid-cols-3">
-          {featured.map((movie) => (
+          {topMovies?.data.map((movie) => (
             <FeaturedReview key={movie.id} movie={movie} />
           ))}
         </div>
@@ -239,7 +246,7 @@ export default function HomePage() {
                           variant="secondary"
                           className="text-[10px]"
                         >
-                          {getGenreName(gid,genres)}
+                          {getGenreName(gid, genres)}
                         </Badge>
                       ))}
                   </div>
@@ -247,7 +254,7 @@ export default function HomePage() {
               </Card>
             </Link>
           ))}
-          {genreMoviesData?.loading && <Loader />}
+          {genreMoviesData?.loading && <Loading />}
         </div>
 
         {/* Pagination: only show when popular is displayed */}

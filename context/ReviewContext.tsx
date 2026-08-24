@@ -3,7 +3,7 @@
 
 import { useState, useCallback, useContext, createContext } from "react";
 import axios, { AxiosError } from "axios";
-import { ErrorResponse } from "@/models/user";
+import { ErrorResponse } from "@/models/User";
 import { PaginatedReviewResponse, Review } from "@/models/Review";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";

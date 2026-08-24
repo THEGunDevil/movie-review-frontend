@@ -1,4 +1,4 @@
-import { Genre } from "@/models/movie";
+import { Genre } from "@/models/Movie";
 import { TVShow } from "@/models/TVShow";
 import {
   CalendarDays,

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
 import axios from "axios";
 import { toast } from "sonner";
-import { SignUpData } from "@/models/user";
+import { SignUpData } from "@/models/User";
 
 export default function SignupPage() {
   const router = useRouter();

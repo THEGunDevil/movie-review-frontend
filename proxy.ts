@@ -44,11 +44,6 @@ export default async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // 5. Agent routes
-    if (pathname.startsWith("/agent-dashboard") && role !== "agent" && role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
     // 6. Protect review submission endpoint (e.g., POST /api/reviews)
     if (pathname === "/api/reviews" && request.method === "POST") {
       return NextResponse.next(); // already authenticated
@@ -62,6 +57,6 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!_next/static|_next/image|icon.png|manifest.webmanifest|robots.txt|sitemap.xml).*)",
   ],
 };

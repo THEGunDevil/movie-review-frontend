@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Pagination from "@/components/pagination";
 import MovieCard from "@/components/MovieCard";
 import SidebarContent from "@/components/SidebarContent";
-import { Movie } from "@/models/movie";
+import { Movie } from "@/models/Movie";
 
 export default function MoviesPageComponent({
   page,
@@ -33,9 +33,7 @@ export default function MoviesPageComponent({
   selectedGenreId: string | null;
   setSelectedGenreId: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
-  }) {
-
-  
+}) {
   return (
     <main className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <div className="mx-auto max-w-7xl flex gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -105,7 +103,7 @@ export default function MoviesPageComponent({
           {sortedMovies.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {sortedMovies.map((movie) => (
-                <MovieCard key={movie.id} movie={movie}/>
+                <MovieCard key={movie.id} movie={movie} />
               ))}
             </div>
           ) : (

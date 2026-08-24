@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import axios, { AxiosError } from "axios";
-import { ErrorResponse, User, UseUserDataProps } from "@/models/user";
+import { ErrorResponse, User, UseUserDataProps } from "@/models/User";
 
 export function useUserData(props: UseUserDataProps | null) {
   const [data, setData] = useState<User | null>(null);
@@ -51,7 +51,7 @@ export function useUserData(props: UseUserDataProps | null) {
     } finally {
       setLoading(false);
     }
-  }, [userID, accessToken]);   // ✅ stable dependencies (strings)
+  }, [userID, accessToken]); // ✅ stable dependencies (strings)
 
   useEffect(() => {
     fetchUser();

@@ -6,22 +6,29 @@ export interface User {
   user_name: string;
   email: string;
   password_hash: string;
-
   role: "user" | "admin";
-
   created_at: string;
   updated_at: string;
-
   token_version: number;
-
   is_banned: boolean;
-  will_profit: boolean;
-
   ban_reason: string | null;
   ban_until: string | null;
   is_permanent_ban: boolean;
 }
-
+export interface UserProfile {
+  id: string;                  // UUID comes as a string in JSON
+  user_name: string;
+  profile_picture: string | null;
+  bio: string;
+  join_date: string;           // time.Time is serialized as an ISO string
+  review_count: number;
+  like_count: number;
+  comment_count: number;
+  follower_count: number;
+  following_count: number;
+  is_following: boolean;
+  is_own_profile: boolean;
+}
 export interface ErrorResponse {
   message?: string;
 }

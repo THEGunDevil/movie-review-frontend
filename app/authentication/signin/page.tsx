@@ -12,7 +12,7 @@ import AuthLayout from "@/components/AuthLayout";
 import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { SignInData } from "@/models/user";
+import { SignInData } from "@/models/User";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -55,7 +55,10 @@ export default function SignInPage() {
         });
       }, 1000);
     } catch (error: any) {
-      console.error("❌ Signing in failed:", error.response?.data || error.message);
+      console.error(
+        "❌ Signing in failed:",
+        error.response?.data || error.message,
+      );
 
       const errorMessage =
         error.response?.data?.message ||
@@ -79,9 +82,7 @@ export default function SignInPage() {
       <h2 className="font-mono text-2xl font-bold text-slate-100 mb-1">
         Sign in to Framewise
       </h2>
-      <p className="text-sm text-slate-500 mb-6">
-        Continue your film journey.
-      </p>
+      <p className="text-sm text-slate-500 mb-6">Continue your film journey.</p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Email Field */}
@@ -115,7 +116,10 @@ export default function SignInPage() {
         {/* Password Field */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="font-mono text-xs text-slate-400">
+            <Label
+              htmlFor="password"
+              className="font-mono text-xs text-slate-400"
+            >
               Password
             </Label>
             <Link
@@ -138,7 +142,9 @@ export default function SignInPage() {
                 },
               })}
               className={`bg-slate-900/60 border-slate-700/60 text-slate-200 font-mono text-sm pr-10 ${
-                errors.password ? "border-rose-500/50 focus:border-rose-500" : ""
+                errors.password
+                  ? "border-rose-500/50 focus:border-rose-500"
+                  : ""
               }`}
             />
             <button

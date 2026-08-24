@@ -1,5 +1,5 @@
 "use client";
-import { Film, Menu } from "lucide-react";
+import { Film, Menu, Tv } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,9 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Pagination from "@/components/pagination";
-import MovieCard from "@/components/MovieCard";
 import SidebarContent from "@/components/SidebarContent";
-import { Movie } from "@/models/movie";
 import TVShowCard from "./TVShowCard";
 import { TVShow } from "@/models/TVShow";
 
@@ -56,10 +54,10 @@ export default function TVShowsPageComponent({
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div>
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-white">
-                Movies
+                TV
               </h1>
               <p className="mt-2 text-lg text-slate-400">
-                Browse our collection of reviewed films.
+                Browse our collection of reviewed TV shows.
               </p>
             </div>
 
@@ -76,7 +74,9 @@ export default function TVShowsPageComponent({
                 <SelectContent className="bg-slate-800 border-slate-700 text-slate-300">
                   <SelectItem value="popularity.desc">Popularity</SelectItem>
                   <SelectItem value="vote_average.desc">Top Rated</SelectItem>
-                  <SelectItem value="release_date.desc">Release Date</SelectItem>
+                  <SelectItem value="release_date.desc">
+                    Release Date
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -99,7 +99,7 @@ export default function TVShowsPageComponent({
             </div>
           </div>
 
-          {/* Movie Grid */}
+          {/* TV Grid */}
           {shows.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {shows.map((show) => (
@@ -108,7 +108,7 @@ export default function TVShowsPageComponent({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <Film className="h-12 w-12 mb-4" />
+              <Tv className="h-12 w-12 mb-4" />
               <p className="text-lg font-medium">No movies found.</p>
             </div>
           )}

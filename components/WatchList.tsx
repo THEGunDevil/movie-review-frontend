@@ -1,29 +1,34 @@
-import { Bookmark } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import Link from "next/link";
+import Image from "next/image";
+import { Film } from "lucide-react";
+import { WatchlistItem } from "@/models/Watchlist";
 
-export default function WatchlistCard({ watchlist }: { watchlist: string[] }) {
+export default function WatchlistCard({ item }: { item: WatchlistItem }) {
   return (
-    <Card
-      id="watchlist"
-      className="rounded-lg border-0 bg-white ring-1 ring-[#dfe4ec]"
+    <Link
+      key={item.id}
+      href={`/${item.media_type === "movie" ? "movies" : "tv"}/${item.media_id}`}
+      className="group overflow-hidden rounded-xl border border-slate-800 hover:border-slate-600 transition"
     >
-      <CardHeader className="rounded-none">
-        <CardTitle className="flex items-center gap-2">
-          <Bookmark className="size-5 text-[#12a89d]" />
-          Watchlist
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {watchlist.map((movie, index) => (
-          <div
-            key={movie}
-            className="flex items-center justify-between border-b border-[#eef1f5] pb-3 last:border-0 last:pb-0"
-          >
-            <span className="font-medium">{movie}</span>
-            <span className="text-sm text-[#7b746f]">0{index + 1}</span>
+      <div className="relative aspect-2/3 bg-slate-800">
+        {item.media_poster_path ? (
+          <Image
+            src={`https://image.tmdb.org/t/p/w500${item.media_poster_path}`}
+            alt={item.media_title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <Film className="h-8 w-8 text-slate-600" />
           </div>
-        ))}
-      </CardContent>
-    </Card>
+        )}
+      </div>
+      <div className="p-2">
+        <p className="text-sm font-medium text-slate-200 truncate group-hover:text-red-400">
+          {item.media_title}
+        </p>
+      </div>
+    </Link>
   );
 }

@@ -1,12 +1,6 @@
 import { useCallback, useState } from "react";
 import axios, { AxiosError } from "axios";
-import type { PaginatedCreditResponse } from "@/models/movie";
-
-interface CreditsState {
-  data: PaginatedCreditResponse | null;
-  loading: boolean;
-  error: string | null;
-}
+import { CreditsState, PaginatedCreditResponse } from "@/models/Movie";
 
 export default function useCredits() {
   const [creditsData, setCreditsData] = useState<CreditsState>({
@@ -15,14 +9,8 @@ export default function useCredits() {
     error: null,
   });
 
-  const limit = 10;
-
-  const fetchCredits = useCallback(
-    async (
-      id: number,
-      type: string,
-      pageNum: number = 1
-    ) => {
+  const fetchMovieCredits = useCallback(
+    async (id: number, type: string, pageNum: number = 1) => {
       setCreditsData((prev) => ({
         ...prev,
         loading: true,
@@ -35,10 +23,10 @@ export default function useCredits() {
           {
             params: {
               type,
-              limit,
+              limit: "20",
               page: pageNum,
             },
-          }
+          },
         );
         setCreditsData({
           data: response.data,
@@ -64,24 +52,56 @@ export default function useCredits() {
         });
       }
     },
-    []
+    [],
   );
+  const fetchTVCredits = useCallback(
+    async (id: number, type: string, pageNum: number = 1) => {
+      setCreditsData((prev) => ({
+        ...prev,
+        loading: true,
+        error: null,
+      }));
 
-  const refetchCredits = useCallback(
-    (
-      id: number,
-      type: string,
-      pageNum: number = 1
-    ) => {
-      return fetchCredits(id, type, pageNum);
+      try {
+        const response = await axios.get<PaginatedCreditResponse>(
+          `${process.env.NEXT_PUBLIC_API_URL}/tv_shows/tv_show/credits/${id}`,
+          {
+            params: {
+              type,
+              limit: "20",
+              page: pageNum,
+            },
+          },
+        );
+        setCreditsData({
+          data: response.data,
+          loading: false,
+          error: null,
+        });
+      } catch (err) {
+        const axiosErr = err as AxiosError<{
+          message?: string;
+        }>;
+
+        const message =
+          axiosErr.response?.data?.message ??
+          axiosErr.message ??
+          "Something went wrong";
+
+        console.error("Failed to fetch credits:", err);
+
+        setCreditsData({
+          data: null,
+          loading: false,
+          error: message,
+        });
+      }
     },
-    [fetchCredits]
+    [],
   );
-
   return {
     creditsData,
-    fetchCredits,
-    refetchCredits,
+    fetchMovieCredits,
+    fetchTVCredits,
   };
 }
-

@@ -12,8 +12,11 @@ import Reviews from "@/components/Reviews";
 import AddReviewCom from "@/components/AddReviewCom";
 import { ReviewProvider, useReviews } from "@/context/ReviewContext";
 
-import type { CreditType, VideoType } from "@/models/movie";
 import { TVShow } from "@/models/TVShow";
+import Loading from "@/components/Loading";
+import { CreditType, VideoType } from "@/models/Movie";
+import useCredits from "@/hooks/useCredits";
+import { GoToPage } from "@/lib/helpers";
 
 function getDisplayVideos(videos: any[]) {
   return videos
@@ -39,14 +42,10 @@ function TVDetailContent() {
   const [tvShow, setTVShow] = useState<TVShow | null>(null);
   const [loadingShow, setLoadingShow] = useState(true);
   const [showError, setShowError] = useState<string | null>(null);
-
-  // ── Credits ──
-  const [creditsState, setCreditsState] = useState({
-    data: [] as any[],
-    type: "cast" as CreditType,
-    page: 1,
-    totalPages: 1,
-  });
+  const [creditType, setCreditType] = useState<CreditType>("cast");
+  const { creditsData, fetchTVCredits } = useCredits();
+  const { page, goToPage } = GoToPage();
+  const totalCreditPages = creditsData?.data?.total_pages;
 
   // ── Videos ──
   const [videosState, setVideosState] = useState({
@@ -91,26 +90,10 @@ function TVDetailContent() {
   // ---------- Fetch credits ----------
   useEffect(() => {
     if (!id) return;
-    axios
-      .get(
-        `${process.env.NEXT_PUBLIC_API_URL}/tv_shows/tv_show/credits/${id}`,
-        {
-          params: {
-            type: creditsState.type,
-            page: creditsState.page,
-            limit: 20,
-          },
-        },
-      )
-      .then((res) =>
-        setCreditsState((prev) => ({
-          ...prev,
-          data: res.data.credits ?? [],
-          totalPages: res.data.total_pages ?? 1,
-        })),
-      )
-      .catch(console.error);
-  }, [id, creditsState.type, creditsState.page]);
+    const TVID = Number(id);
+    if (Number.isNaN(TVID)) return;
+    fetchTVCredits(TVID, creditType, page);
+  }, [id, creditType, page, fetchTVCredits]);
 
   // ---------- Fetch videos ----------
   useEffect(() => {
@@ -119,13 +102,14 @@ function TVDetailContent() {
       .get(`${process.env.NEXT_PUBLIC_API_URL}/tv_shows/tv_show/videos/${id}`, {
         params: { type: videosState.type, page: videosState.page, limit: 10 },
       })
-      .then((res) =>
+      .then((res) => {
+        const data = res.data;
         setVideosState((prev) => ({
           ...prev,
-          data: res.data.videos ?? [],
-          totalPages: res.data.total_pages ?? 1,
-        })),
-      )
+          data: data.videos ?? [],
+          totalPages: data.totalPages ?? data.total_pages ?? 1,
+        }));
+      })
       .catch(console.error);
   }, [id, videosState.type, videosState.page]);
 
@@ -144,14 +128,9 @@ function TVDetailContent() {
     );
     return trailer ?? displayedVideos[0] ?? null;
   }, [displayedVideos, videosState.activeVideoId]);
-
   // ---------- Loading / Error ----------
   if (loadingShow) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <Loader2 className="h-12 w-12 animate-spin text-red-500" />
-      </div>
-    );
+    return <Loading />;
   }
 
   if (showError || !tvShow) {
@@ -227,16 +206,12 @@ function TVDetailContent() {
 
             {/* Credits */}
             <Credits
-              creditType={creditsState.type}
-              setCreditType={(type) =>
-                setCreditsState((prev) => ({ ...prev, type, page: 1 }))
-              }
-              credits={creditsState.data}
-              totalPages={creditsState.totalPages}
-              page={creditsState.page}
-              onPageChange={(p) =>
-                setCreditsState((prev) => ({ ...prev, page: p }))
-              }
+              creditType={creditType}
+              setCreditType={setCreditType}
+              credits={creditsData?.data?.credits ?? []}
+              totalPages={totalCreditPages ?? 1}
+              page={page}
+              onPageChange={goToPage}
             />
 
             {/* Video selector (thumbnails) */}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useMovies } from "@/hooks/useMovies";
-import { Movie } from "@/models/movie";
+import { Movie } from "@/models/Movie";
 import { useEffect, useMemo, useState } from "react";
-import Loader from "@/components/Loader";
+import Loader from "@/components/Loading";
 import { getDateTimestamp } from "@/lib/format";
 import MoviesPageComponent from "@/components/MoviesPageComponent";
 import { GoToPage } from "@/lib/helpers";

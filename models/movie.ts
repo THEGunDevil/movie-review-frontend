@@ -1,3 +1,14 @@
+export interface MovieCredit {
+	id: number;
+	movie_id: number;
+	person_id: number;
+	role: string;
+	type: CreditType;
+	order: number;
+	department?: string | null;
+	person_name: string;
+	person_profile_path: string | null;
+}
 export interface Genre {
 	id: number;
 	name: string;
@@ -55,13 +66,19 @@ export interface PaginatedMovieResponse<T = Movie> {
 	page: number;
 	limit: number;
 	movies: T[];
-	total_pages?: number;
+	total_pages: number;
 }
+
 export interface PaginatedCreditResponse<T = MovieCredit> {
 	page: number;
 	limit: number;
 	credits: T[];
 	total_pages?: number;
+}
+export interface CreditsState {
+  data: PaginatedCreditResponse | null;
+  loading: boolean;
+  error: string | null;
 }
 export interface PaginatedVideoResponse<T = MovieVideo> {
 	page: number;
@@ -74,17 +91,7 @@ export interface PaginatedVideoResponse<T = MovieVideo> {
 export type CreditType = "cast" | "crew";
 export type VideoType = "Trailer" | "Teaser";
 
-export interface MovieCredit {
-	id: number;
-	movie_id: number;
-	person_id: number;
-	role: string;
-	type: CreditType;
-	order: number;
-	department?: string | null;
-	person_name: string;
-	person_profile_path: string | null;
-}
+
 
 export interface Person {
 	id: number;

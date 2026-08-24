@@ -42,8 +42,17 @@ export function CommentSection({
             placeholder="Join the discussion..."
             className="min-h-10 flex-1 resize-none rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-slate-600"
           />
-          <Button size="icon" disabled={!text.trim() || submitting} onClick={handleSubmit} className="h-10 w-10 shrink-0 bg-red-600 hover:bg-red-500">
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <Button
+            size="icon"
+            disabled={!text.trim() || submitting}
+            onClick={handleSubmit}
+            className="h-10 w-10 shrink-0 bg-red-600 hover:bg-red-500"
+          >
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -60,7 +69,9 @@ export function CommentSection({
             ))}
           </div>
         ) : (
-          <p className="py-4 text-center text-xs text-slate-600">No comments yet. Start the discussion.</p>
+          <p className="py-4 text-center text-xs text-slate-600">
+            No comments yet. Start the discussion.
+          </p>
         )}
       </div>
     </div>

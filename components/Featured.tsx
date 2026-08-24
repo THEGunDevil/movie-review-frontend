@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Star, Play, ArrowRight, Calendar, Film } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Movie } from "@/models/movie";
+import { Movie } from "@/models/Movie";
 export default function FeaturedReview({ movie }: { movie: Movie }) {
   const year = movie.release_date
     ? new Date(movie.release_date).getFullYear()
