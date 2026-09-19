@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
-import { SignUpData } from "@/models/User";
+import { ErrorResponse, SignUpData } from "@/models/User";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -67,16 +67,18 @@ export default function SignupPage() {
           position: "top-center",
         });
       }, 1000);
-    } catch (error: any) {
-      console.error(
-        "❌ Registration failed:",
-        error.response?.data || error.message,
-      );
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
+    } catch (error) {
+
+      const message =
+        (error as AxiosError<ErrorResponse>).response?.data?.message ??
+        (error as AxiosError).message ??
         "Registration failed. Please try again.";
-      toast.error(errorMessage, { position: "bottom-center" });
+    
+      console.error("❌ Registration failed:", message);
+    
+      toast.error(message, {
+        position: "bottom-center",
+      });
     } finally {
       setSubmitting(false);
     }
