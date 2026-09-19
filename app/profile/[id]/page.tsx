@@ -91,24 +91,9 @@ export default function ProfilePage() {
     error: null,
   });
 
-  // =========================================================
-  // Tabs
-  // =========================================================
 
   const [activeTab, setActiveTab] = useState<Tab>("reviews");
-
-  // =========================================================
-  // Follow
-  // =========================================================
-
   const [followLoading, setFollowLoading] = useState(false);
-
-  // =========================================================
-  // Edit profile state
-  // IMPORTANT:
-  // profileData is declared later, so DO NOT initialize
-  // this state from profileData here.
-  // =========================================================
 
   const [editProfile, setEditProfile] = useState<{
     open: boolean;
@@ -276,16 +261,18 @@ export default function ProfilePage() {
     }
   }, [api, getErrorMessage, userID]);
 
-  // =========================================================
-  // Initial fetch
-  // =========================================================
-
   useEffect(() => {
-    if (authLoading || !userID || !accessToken) {
-      return;
-    }
-
-    void Promise.all([fetchProfile(), fetchReviews(), fetchWatchlist()]);
+    if (authLoading || !userID || !accessToken) return;
+  
+    const timer = setTimeout(() => {
+      void Promise.all([
+        fetchProfile(),
+        fetchReviews(),
+        fetchWatchlist(),
+      ]);
+    }, 0);
+  
+    return () => clearTimeout(timer);
   }, [
     authLoading,
     accessToken,
@@ -307,7 +294,7 @@ export default function ProfilePage() {
 
   const watchlistData = watchList.data?.watchlist ?? [];
 
-  const totalWatchlist = watchList.data?.total ?? watchlistData.length;
+  const totalWatchlist = watchList.data?.total_pages ?? watchlistData.length;
 
   const pageLoading =
     authLoading || profile.loading || reviews.loading || watchList.loading;
@@ -315,26 +302,6 @@ export default function ProfilePage() {
   const pageError = profile.error || reviews.error || watchList.error || null;
 
   const isOwnProfile = profileData?.id === userID;
-
-  // =========================================================
-  // Sync edit form with profile
-  // =========================================================
-
-  useEffect(() => {
-    if (!profileData) {
-      return;
-    }
-
-    setEditProfile((prev) => ({
-      ...prev,
-      name: profileData.user_name ?? "",
-      bio: profileData.bio ?? "",
-      image: profileData.profile_picture ?? "",
-      imageFile: null,
-      removeImage: false,
-    }));
-  }, [profileData?.user_name, profileData?.bio, profileData?.profile_picture]);
-
   // =========================================================
   // Open edit dialog
   // =========================================================

@@ -137,53 +137,56 @@ function useWatchList() {
     }
   }, [accessToken, api]);
   const fetchMyWatchlist = useCallback(async () => {
-    if (!accessToken) {
-      setWatchList({
-        data: [],
-        loading: false,
-        error: null,
-      });
-
-      return;
-    }
-
-    setWatchList((prev) => ({
-      ...prev,
-      loading: true,
-      error: null,
-    }));
-
-    try {
-      const response = await api.get<PaginatedWatchlistResponse>("/watchlist");
-
-      setWatchList({
-        data: response.data.watchlist,
-        loading: false,
-        error: null,
-      });
-
-      return response.data;
-    } catch (error) {
-      const axiosError = error as AxiosError<ErrorResponse>;
-
-      const message =
-        axiosError.response?.data?.message ??
-        axiosError.message ??
-        "Failed to load watchlist.";
-
+      if (!accessToken) {
+        setWatchList({
+          data: [],
+          loading: false,
+          error: null,
+        });
+  
+        return;
+      }
+  
       setWatchList((prev) => ({
         ...prev,
-        loading: false,
-        error: message,
+        loading: true,
+        error: null,
       }));
-
-      toast.error(message, {
-        position: "bottom-center",
-      });
-
-      throw error;
-    }
-  }, [accessToken, api]);
+  
+      try {
+        const response = await api.get<PaginatedWatchlistResponse>("/watchlist");
+  
+        setWatchList({
+          // Safe fallback: Ensures `data` is ALWAYS an array even if API returns null/undefined
+          data: response.data?.watchlist ?? [],
+          loading: false,
+          error: null,
+        });
+  
+        return response.data;
+      } catch (error) {
+        const axiosError = error as AxiosError<ErrorResponse>;
+  
+        const message =
+          axiosError.response?.data?.message ??
+          axiosError.message ??
+          "Failed to load watchlist.";
+  
+        setWatchList((prev) => ({
+          ...prev,
+          // Keep existing array or fallback to empty array on error
+          data: prev.data ?? [],
+          loading: false,
+          error: message,
+        }));
+  
+        toast.error(message, {
+          position: "bottom-center",
+        });
+  
+        throw error;
+      }
+    }, [accessToken, api]);
   // =========================================================
   // Remove movie
   // =========================================================
@@ -218,7 +221,7 @@ function useWatchList() {
 
       throw error;
     }
-  }, [accessToken, api]);
+  }, [ api]);
 
   // =========================================================
   // Remove TV show
@@ -254,7 +257,7 @@ function useWatchList() {
 
       throw error;
     }
-  }, [accessToken, api]);
+  }, [api]);
 
   // =========================================================
   // Check movie

@@ -111,10 +111,23 @@ function MovieDetailsContent() {
   );
   const videoList = useMemo(() => getDisplayVideos(rawVideos), [rawVideos]);
   const defaultVideo = useMemo(() => getDefaultVideo(videoList), [videoList]);
-  const activeVideo = useMemo(
-    () => videoList.find((v) => v.id === activeVideoId) ?? defaultVideo ?? null,
-    [activeVideoId, defaultVideo, videoList],
-  );
+  const activeVideo = useMemo(() => {
+    if (!videoList.length) {
+      return null;
+    }
+  
+    return (
+      videoList.find(
+        (video) => video.id === activeVideoId,
+      ) ??
+      defaultVideo ??
+      videoList[0]
+    );
+  }, [
+    activeVideoId,
+    defaultVideo,
+    videoList,
+  ]);
   const { creditsData, fetchMovieCredits } = useCredits();
   const genres = useMemo(() => getGenres(movie), [movie]);
   const { page, goToPage } = GoToPage();
@@ -156,16 +169,6 @@ function MovieDetailsContent() {
     videoData?.error ||
     reviewData?.error;
 
-  useEffect(() => {
-    if (!videoList.length) {
-      setActiveVideoId(null);
-      return;
-    }
-    const currentVideoExists = videoList.some((v) => v.id === activeVideoId);
-    if (!currentVideoExists) {
-      setActiveVideoId(defaultVideo?.id ?? videoList[0].id);
-    }
-  }, [activeVideoId, defaultVideo?.id, videoList]);
   const addReview = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Call the context's handleAddReview directly (it already prevents default internally,

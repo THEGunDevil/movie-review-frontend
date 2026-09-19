@@ -124,7 +124,7 @@ export function useTVShows() {
         setGenreTVShowsData({ data: null, loading: false, error: message });
       }
     },
-    [limit],
+    [limit,page],
   );
 
   return {

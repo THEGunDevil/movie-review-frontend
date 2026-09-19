@@ -68,40 +68,42 @@ export default function HomePage() {
     fetchGenres();
   }, [page, fetchMovies, fetchGenres]);
 
-  const fetchTopMovies = async () => {
-    setTopMovies((prev) => ({
-      ...prev,
-      loading: true,
-      error: null,
-    }));
-
-    try {
-      const { data } = await axios.get<FeaturedMovies>(
-        `${process.env.NEXT_PUBLIC_API_URL}/movies/top_movies`,
-      );
-      setTopMovies((prev) => ({
-        ...prev,
-        data: data.results,
-      }));
-    } catch (err) {
-      const axiosErr = err as AxiosError<ErrorResponse>;
-      const message =
-        axiosErr.response?.data?.message ??
-        axiosErr.message ??
-        "Something went wrong";
-      setTopMovies((prev) => ({
-        ...prev,
-        error: message,
-      }));
-    } finally {
-      setTopMovies((prev) => ({
-        ...prev,
-        loading: false,
-      }));
-    }
-  };
   useEffect(() => {
+    let isMounted = true;
+  
+    const fetchTopMovies = async () => {
+      try {
+        const { data } = await axios.get<FeaturedMovies>(
+          `${process.env.NEXT_PUBLIC_API_URL}/movies/top_movies`
+        );
+        if (isMounted) {
+          setTopMovies({
+            data: data.results,
+            loading: false,
+            error: null,
+          });
+        }
+      } catch (err) {
+        if (isMounted) {
+          const axiosErr = err as AxiosError<ErrorResponse>;
+          const message =
+            axiosErr.response?.data?.message ??
+            axiosErr.message ??
+            "Something went wrong";
+          setTopMovies({
+            data: [],
+            loading: false,
+            error: message,
+          });
+        }
+      }
+    };
+  
     fetchTopMovies();
+  
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLatestReviews = (id: number) => {

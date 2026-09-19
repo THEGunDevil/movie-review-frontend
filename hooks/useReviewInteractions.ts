@@ -217,13 +217,27 @@ export function useReviewInteractions() {
     if (authLoading || !accessToken) {
       return;
     }
-
-    fetchAllReviews(page);
-
+  
+    let cancelled = false;
+  
+    const loadReviews = async () => {
+      if (cancelled) {
+        return;
+      }
+  
+      await fetchAllReviews(page);
+    };
+  
+    loadReviews();
+  
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
+  
+    return () => {
+      cancelled = true;
+    };
   }, [
     page,
     authLoading,

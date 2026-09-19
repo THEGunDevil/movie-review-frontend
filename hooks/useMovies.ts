@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import { Genre, Movie, PaginatedMovieResponse } from "@/models/Movie";
 import { ErrorResponse } from "@/models/User";
@@ -220,7 +220,7 @@ export function useMovies() {
         });
       }
     },
-    [limit],
+    [limit,page],
   );
   const refetchMovies = useCallback(() => {
     fetchMovies(page);
