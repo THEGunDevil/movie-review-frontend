@@ -70,7 +70,7 @@ export default function HomePage() {
 
   useEffect(() => {
     let isMounted = true;
-  
+
     const fetchTopMovies = async () => {
       try {
         const { data } = await axios.get<FeaturedMovies>(
@@ -98,9 +98,9 @@ export default function HomePage() {
         }
       }
     };
-  
+
     fetchTopMovies();
-  
+
     return () => {
       isMounted = false;
     };

@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { SignInData } from "@/models/User";
+import { ErrorResponse, SignInData } from "@/models/User";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -54,18 +54,15 @@ export default function SignInPage() {
           position: "top-center",
         });
       }, 1000);
-    } catch (error: any) {
-      console.error(
-        "❌ Signing in failed:",
-        error.response?.data || error.message,
-      );
-
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
+    } catch (error) {
+      const message =
+        (error as AxiosError<ErrorResponse>).response?.data?.message ??
+        (error as AxiosError).message ??
         "Signing in failed. Please check your credentials.";
-
-      toast.error(errorMessage, {
+    
+      console.error("❌ Signing in failed:", message);
+    
+      toast.error(message, {
         position: "bottom-center",
       });
     } finally {
