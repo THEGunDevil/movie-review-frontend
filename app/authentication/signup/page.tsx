@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Info, Check, AlertCircle, Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ export default function SignupPage() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm<SignUpData>({
     defaultValues: {
@@ -33,9 +33,15 @@ export default function SignupPage() {
     },
   });
 
-  const password = watch("password", "");
-  const confirmPassword = watch("confirm_password", "");
-
+  const password = useWatch({
+    control,
+    name: "password",
+  });
+  
+  const confirmPassword = useWatch({
+    control,
+    name: "confirm_password",
+  });
   const rules = [
     { label: "At least 8 characters", valid: password.length >= 8 },
     { label: "One number", valid: /\d/.test(password) },
@@ -73,9 +79,9 @@ export default function SignupPage() {
         (error as AxiosError<ErrorResponse>).response?.data?.message ??
         (error as AxiosError).message ??
         "Registration failed. Please try again.";
-    
+
       console.error("❌ Registration failed:", message);
-    
+
       toast.error(message, {
         position: "bottom-center",
       });
