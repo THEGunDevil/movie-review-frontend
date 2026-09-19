@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function AboutPage() {
+export default function Trailers() {
   return (
     <main className="min-h-screen bg-white px-6 py-10">
       <section className="mx-auto max-w-5xl">

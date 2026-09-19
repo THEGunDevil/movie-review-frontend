@@ -1,8 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Film, Home, LogIn, LogOut, Star, Tv, User, UserPlus, X } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  Bell,
+  Bookmark,
+  Film,
+  Home,
+  LogIn,
+  LogOut,
+  Star,
+  Tv,
+  User,
+  UserPlus,
+  X,
+  CheckCheck,
+  Loader2,
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import SignOutDialog from "./SignOutDialog";
 import { usePathname } from "next/navigation";
@@ -10,12 +24,14 @@ import { cn } from "@/lib/utils";
 import axios from "axios";
 import { Button } from "./ui/button";
 import { AppNotification } from "@/models/Notification";
+import { formatDistanceToNow } from "date-fns";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/movies", label: "Movies", icon: Film },
   { href: "/tv", label: "TV Shows", icon: Tv },
   { href: "/reviews", label: "Reviews", icon: Star },
+  { href: "/watchlist", label: "Watch List", icon: Bookmark },
 ];
 
 export function Header() {
@@ -23,27 +39,125 @@ export function Header() {
   const pathname = usePathname();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  const fetchNotifications = useCallback(async () => {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // ---- Fetch initial notifications + SSE connection ----
+useEffect(() => {
+  if (!accessToken) {
+    return;
+  }
+
+  let mounted = true;
+
+  const eventSource = new EventSource(
+    `${API_URL}/notifications/stream?token=${encodeURIComponent(accessToken)}`,
+  );
+
+  eventSourceRef.current = eventSource;
+
+  eventSource.onopen = () => {
+    console.log("✅ Notification SSE connected");
+  };
+
+  eventSource.addEventListener("connected", (event) => {
+    console.log("✅ SSE handshake:", event.data);
+  });
+
+  eventSource.addEventListener("notification", (event) => {
     try {
-      const { data } = await axios.get<AppNotification[]>(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications`,
+      const newNotification: AppNotification = JSON.parse(
+        event.data,
       );
+
+      if (!mounted) {
+        return;
+      }
+
+      setNotifications((prev) => {
+        // duplicate prevent
+        const exists = prev.some(
+          (notification) =>
+            notification.id === newNotification.id,
+        );
+
+        if (exists) {
+          return prev.map((notification) =>
+            notification.id === newNotification.id
+              ? newNotification
+              : notification,
+          );
+        }
+
+        return [
+          newNotification,
+          ...prev,
+        ];
+      });
+    } catch (error) {
+      console.error(
+        "❌ Invalid SSE notification",
+        error,
+      );
+    }
+  });
+
+  eventSource.onerror = (error) => {
+    console.error(
+      "❌ Notification SSE error",
+      error,
+    );
+
+    // EventSource automatically reconnect করবে
+  };
+
+  // Initial notifications
+  const fetchInitialNotifications = async () => {
+    try {
+      setLoadingNotifications(true);
+
+      const { data } = await axios.get<AppNotification[]>(
+        `${API_URL}/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          withCredentials: true,
+        },
+      );
+
+      if (!mounted) {
+        return;
+      }
+
       setNotifications(data ?? []);
     } catch (error) {
-      console.error("Failed to fetch notifications", error);
+      console.error(
+        "❌ Failed to fetch notifications",
+        error,
+      );
+    } finally {
+      if (mounted) {
+        setLoadingNotifications(false);
+      }
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    if (accessToken) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [accessToken, fetchNotifications]);
+  fetchInitialNotifications();
 
+  return () => {
+    mounted = false;
+
+    eventSource.close();
+
+    eventSourceRef.current = null;
+  };
+}, [accessToken, API_URL]);
+
+  // ---- Click outside to close dropdown ----
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -57,10 +171,51 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ---- Mark all as read ----
+  const markAllAsRead = async () => {
+  const hasUnread = notifications.some(
+    (notification) => !notification.read,
+  );
+
+  if (!hasUnread) {
+    return;
+  }
+
+  const previousNotifications = notifications;
+
+  setNotifications((prev) =>
+    prev.map((notification) => ({
+      ...notification,
+      read: true,
+    })),
+  );
+
+  try {
+    await axios.post(
+      `${API_URL}/notifications/read-all`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        withCredentials: true,
+      },
+    );
+  } catch (error) {
+    console.error(
+      "Failed to mark all as read",
+      error,
+    );
+
+    setNotifications(previousNotifications);
+  }
+};
+
   const unreadCount = notifications.filter((n) => !n.read).length;
+
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
+      <header className="sticky top-0 z-60 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 text-xl font-bold">
@@ -81,7 +236,7 @@ export function Header() {
                   href={href}
                   className={cn(
                     "transition-colors hover:text-red-600",
-                    isActive ? "text-red-600" : "text-slate-300",
+                    isActive ? "text-red-600" : "text-slate-300"
                   )}
                 >
                   {label}
@@ -111,20 +266,36 @@ export function Header() {
                   </button>
 
                   {isNotificationsOpen && (
-                    <div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg border border-slate-700 bg-slate-900 shadow-xl shadow-black/40 backdrop-blur-md z-50">
+                    <div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg border border-slate-700 bg-slate-900 shadow-xl shadow-black/40 backdrop-blur-md z-50 overflow-hidden">
                       <div className="flex items-center justify-between p-3 border-b border-slate-800">
                         <h2 className="text-sm font-semibold text-slate-100">
                           Notifications
                         </h2>
-                        <button
-                          onClick={() => setIsNotificationsOpen(false)}
-                          className="text-slate-400 hover:text-slate-200"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={markAllAsRead}
+                              className="text-xs text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1"
+                            >
+                              <CheckCheck className="h-3.5 w-3.5" />
+                              Mark all read
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setIsNotificationsOpen(false)}
+                            className="text-slate-400 hover:text-slate-200"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="max-h-64 overflow-y-auto">
-                        {notifications.length === 0 ? (
+
+                      <div className="max-h-72 overflow-y-auto">
+                        {loadingNotifications ? (
+                          <div className="p-4 flex justify-center">
+                            <Loader2 className="h-5 w-5 animate-spin text-slate-500" />
+                          </div>
+                        ) : notifications.length === 0 ? (
                           <p className="p-4 text-sm text-slate-400 text-center">
                             No notifications yet
                           </p>
@@ -132,26 +303,41 @@ export function Header() {
                           notifications.map((notif) => (
                             <div
                               key={notif.id}
-                              className="p-3 border-b border-slate-800/50 last:border-0 hover:bg-slate-800/30 transition-colors"
+                              className={cn(
+                                "p-3 border-b border-slate-800/50 last:border-0 transition-colors hover:bg-slate-800/30",
+                                !notif.read && "bg-slate-800/20"
+                              )}
                             >
-                              <p className="text-sm font-medium text-slate-100">
-                                {notif.title}
-                              </p>
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-sm font-medium text-slate-100">
+                                  {notif.title}
+                                </p>
+                                {!notif.read && (
+                                  <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 mt-1" />
+                                )}
+                              </div>
                               <p className="text-xs text-slate-400 mt-0.5">
                                 {notif.message}
                               </p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {notif.created_at}
+                              <p className="text-[11px] text-slate-500 mt-1">
+                                {formatDistanceToNow(new Date(notif.created_at), {
+                                  addSuffix: true,
+                                })}
                               </p>
                             </div>
                           ))
                         )}
                       </div>
+
                       {notifications.length > 0 && (
                         <div className="p-2 border-t border-slate-800">
-                          <button className="w-full text-xs text-center text-slate-400 hover:text-slate-200 py-1 transition-colors">
+                          <Link
+                            href="/notifications"
+                            className="block w-full text-xs text-center text-slate-400 hover:text-slate-200 py-1 transition-colors"
+                            onClick={() => setIsNotificationsOpen(false)}
+                          >
                             View all notifications
-                          </button>
+                          </Link>
                         </div>
                       )}
                     </div>
@@ -201,6 +387,8 @@ export function Header() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-[#0d131d]/95 border-t border-cyan-500/20 backdrop-blur-md">
         <div className="flex justify-around items-center h-16 px-2">
           {navItems.map((link) => {

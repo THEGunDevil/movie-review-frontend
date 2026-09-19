@@ -1,5 +1,7 @@
-import Link from "next/link";
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
 import {
   CalendarDays,
   Film,
@@ -11,11 +13,11 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/format";
-import { ReviewWithMedia } from "@/models/Review";
-import { useAuth } from "@/context/AuthContext";
 import { useEffect, useRef } from "react";
+import { Badge } from "@/components/ui/badge";
+import { ReviewWithMedia } from "@/models/Review";
+import { formatDate } from "@/lib/format";
+import { useAuth } from "@/context/AuthContext";
 
 interface ReviewHeaderProps {
   review: ReviewWithMedia;
@@ -35,38 +37,44 @@ export function ReviewHeader({
   onReport,
 }: ReviewHeaderProps) {
   const { userID, accessToken } = useAuth();
-  const isOwner = userID != null && String(userID) === String(review.user_id);
+
+  const isOwner =
+    userID != null && String(userID) === String(review.user_id);
+
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // বাইরে ক্লিক করলে মেনু বন্ধ
   useEffect(() => {
     if (!menuOpen) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
         onMenuToggle(review.id);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
   }, [menuOpen, onMenuToggle, review.id]);
 
+  const mediaHref = `/${review.media_type === "movie" ? "movies" : "tv"}/${review.media_id}`;
+
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      {/* পোস্টার + টাইটেল */}
-      <div className="flex gap-3 sm:gap-4 min-w-0">
-        <Link
-          href={`/${review.media_type === "movie" ? "movies" : "tv"}/${review.media_id}`}
-          className="shrink-0"
-        >
-          <div className="relative h-16 w-12 sm:h-20 sm:w-14 overflow-hidden rounded-lg bg-slate-800 shadow-md">
+    <header className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 gap-3">
+        <Link href={mediaHref} className="shrink-0">
+          <div className="relative h-16 w-11 overflow-hidden rounded-md bg-slate-800">
             {review.media_poster_path ? (
               <Image
                 src={`https://image.tmdb.org/t/p/w92${review.media_poster_path}`}
                 alt={review.media_title}
                 fill
-                sizes="56px"
+                sizes="44px"
                 className="object-cover"
               />
             ) : (
@@ -79,28 +87,30 @@ export function ReviewHeader({
 
         <div className="min-w-0 flex-1">
           <Link
-            href={`/${review.media_type === "movie" ? "movies" : "tv"}/${review.media_id}`}
-            className="block truncate text-sm sm:text-base font-bold text-slate-200 hover:text-red-400"
+            href={mediaHref}
+            className="block truncate text-sm font-semibold text-slate-200 transition hover:text-red-400 sm:text-base"
           >
             {review.media_title}
           </Link>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
             <Badge
               variant="secondary"
-              className="bg-slate-800 text-[9px] text-slate-400"
+              className="h-4 px-1.5 text-[8px] bg-slate-800 text-slate-400"
             >
               {review.media_type?.toUpperCase()}
             </Badge>
+
             <Link
               href={`/users/${review.user_id}`}
-              className="flex items-center gap-1.5 hover:text-slate-300"
+              className="flex items-center gap-1 hover:text-slate-300"
             >
               {review.user_profile_picture ? (
                 <Image
                   src={review.user_profile_picture}
                   alt={review.user_name}
-                  width={18}
-                  height={18}
+                  width={16}
+                  height={16}
                   className="rounded-full object-cover"
                 />
               ) : (
@@ -108,84 +118,115 @@ export function ReviewHeader({
                   <User className="h-2.5 w-2.5" />
                 </span>
               )}
-              <span className="font-medium">{review.user_name}</span>
+
+              <span className="max-w-24 truncate">{review.user_name}</span>
             </Link>
-            <span className="hidden sm:inline">•</span>
+
+            <span>•</span>
+
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3 w-3" />
               {formatDate(review.created_at)}
             </span>
+
             {review.updated_at && (
-              <span className="text-slate-700">edited</span>
+              <span className="text-slate-600">edited</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* রেটিং + মেনু */}
-      <div className="flex items-center gap-2 ml-auto sm:ml-0">
-        <div className="flex items-center gap-1 rounded-full border border-slate-800 bg-slate-950/70 px-2 py-1 sm:px-2.5 sm:py-1.5">
-          <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-amber-400 text-amber-400" />
-          <span className="text-xs sm:text-sm font-bold text-slate-200">
+      <div className="relative flex shrink-0 items-center gap-1.5">
+        <div className="flex items-center gap-1 rounded-full border border-slate-800 bg-slate-950/70 px-2 py-1">
+          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <span className="text-xs font-semibold text-slate-200">
             {review.rating.toFixed(1)}
           </span>
         </div>
 
-        <div className="relative">
-          <button
-            onClick={() => onMenuToggle(review.id)}
-            className="rounded-md p-1.5 text-slate-600 hover:bg-slate-800 hover:text-slate-300"
-          >
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
+        <button
+          type="button"
+          onClick={() => onMenuToggle(review.id)}
+          aria-label="Review menu"
+          className="rounded-md p-1.5 text-slate-600 transition hover:bg-slate-800 hover:text-slate-300"
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </button>
 
-          {menuOpen && accessToken && (
-            <div
-              ref={menuRef}
-              className="absolute right-0 top-9 z-30 w-40 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-1 shadow-2xl"
-            >
-              {isOwner ? (
-                <>
-                  <button
-                    onClick={() => {
-                      onEdit();
-                      onMenuToggle(review.id);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                  >
-                    <Pencil className="h-3.5 w-3.5" /> Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDelete();
-                      onMenuToggle(review.id);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-red-400 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                  </button>
-                </>
-              ) : (
-                <button
+        {menuOpen && accessToken && (
+          <div
+            ref={menuRef}
+            className="absolute right-0 top-8 z-30 w-36 overflow-hidden rounded-lg border border-slate-800 bg-slate-900 p-1 shadow-xl"
+          >
+            {isOwner ? (
+              <>
+                <MenuButton
+                  icon={<Pencil className="h-3.5 w-3.5" />}
+                  label="Edit"
                   onClick={() => {
-                    onReport();
+                    onEdit();
                     onMenuToggle(review.id);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                >
-                  <Flag className="h-3.5 w-3.5" /> Report
-                </button>
-              )}
-              <button
-                onClick={() => onMenuToggle(review.id)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-              >
-                <Share2 className="h-3.5 w-3.5" /> Share
-              </button>
-            </div>
-          )}
-        </div>
+                />
+
+                <MenuButton
+                  danger
+                  icon={<Trash2 className="h-3.5 w-3.5" />}
+                  label="Delete"
+                  onClick={() => {
+                    onDelete();
+                    onMenuToggle(review.id);
+                  }}
+                />
+              </>
+            ) : (
+              <MenuButton
+                icon={<Flag className="h-3.5 w-3.5" />}
+                label="Report"
+                onClick={() => {
+                  onReport();
+                  onMenuToggle(review.id);
+                }}
+              />
+            )}
+
+            <MenuButton
+              icon={<Share2 className="h-3.5 w-3.5" />}
+              label="Share"
+              onClick={() => onMenuToggle(review.id)}
+            />
+          </div>
+        )}
       </div>
-    </div>
+    </header>
+  );
+}
+
+interface MenuButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}
+
+function MenuButton({
+  icon,
+  label,
+  onClick,
+  danger = false,
+}: MenuButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition ${
+        danger
+          ? "text-red-400 hover:bg-red-500/10"
+          : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

@@ -79,7 +79,7 @@ export default function SearchBar() {
   return (
     <form
       onSubmit={handleSearch}
-      className="relative z-50 mx-auto mt-8 flex max-w-md items-center gap-2 rounded-full border border-slate-700 bg-slate-800/50 px-5 py-3 text-slate-400 backdrop-blur-sm"
+      className="relative mx-auto z-50 mt-8 flex max-w-md items-center gap-2 rounded-full border border-slate-700 bg-slate-800/50 px-5 py-3 text-slate-400 backdrop-blur-sm"
     >
       <Search className="h-4 w-4" />
       <input
@@ -95,7 +95,7 @@ export default function SearchBar() {
       {debouncedSearch && (
         <div
           ref={dropdownRef}
-          className="absolute z-999 top-16 scrollbar-hide left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-6xl max-h-140 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl animate-dropdown-enter"
+          className="absolute top-16 scrollbar-hide left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-6xl max-h-140 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl animate-dropdown-enter"
         >
           <SearchedMovies searchQuery={debouncedSearch} />
         </div>
