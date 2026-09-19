@@ -24,7 +24,7 @@ export default function WatchList() {
 
   const [search, setSearch] = useState("");
   const {
-    watchList,
+    watchList = [],
     loading,
     fetchMyWatchlist,
     removeMovieFromWatchlist,
@@ -35,19 +35,20 @@ export default function WatchList() {
   // Load watchlist
   // =========================================================
 
-useEffect(() => {
- fetchMyWatchlist();
-}, [fetchMyWatchlist]);
+  useEffect(() => {
+    fetchMyWatchlist();
+  }, [fetchMyWatchlist]);
 
   const filteredItems = useMemo(() => {
+    const list = Array.isArray(watchList) ? watchList : [];
     const query = search.trim().toLowerCase();
 
-    return watchList.filter((item) => {
+    return list.filter((item) => {
       const matchesType =
         activeFilter === "all" || item.media_type === activeFilter;
 
       const matchesSearch =
-        !query || item.media_title.toLowerCase().includes(query);
+        !query || item.media_title?.toLowerCase().includes(query);
 
       return matchesType && matchesSearch;
     });
@@ -72,6 +73,7 @@ useEffect(() => {
       console.error("Failed to remove watchlist item:", error);
     }
   };
+  const savedCount = (watchList ?? []).length;
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -99,20 +101,14 @@ useEffect(() => {
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <Bookmark className="h-4 w-4" />
               <span>
-                {watchList.length} {watchList.length === 1 ? "saved" : "saved"}
+                {savedCount} {savedCount === 1 ? "saved" : "saved"}
               </span>
             </div>
           </div>
         </section>
 
-        {/* =====================================================
-            Toolbar
-        ====================================================== */}
-
         <section className="mb-8 rounded-2xl border border-slate-800/70 bg-slate-900/60 p-3 shadow-xl backdrop-blur-xl sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            {/* Search */}
-
             <div className="relative w-full lg:max-w-md">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 

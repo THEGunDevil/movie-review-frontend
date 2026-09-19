@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bell,
   CheckCheck,
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
 type NotificationType =
   | "like"
@@ -103,9 +104,9 @@ function NotificationItem({
     >
       {notification.avatar ? (
         <div className="relative shrink-0">
-          <img
+          <Image
             src={notification.avatar}
-            alt=""
+            alt={notification.type}
             className="h-10 w-10 rounded-full object-cover"
           />
           <div
@@ -170,103 +171,139 @@ function NotificationItem({
 
 export default function NotificationsPage() {
   const { accessToken } = useAuth();
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const unreadCount = notifications.filter(
+    (notification) => !notification.read
+  ).length;
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const fetchNotifications = useCallback(() => {
-    if (!accessToken) return null;
-
-    setLoading(true);
-    setError(null);
-
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-    // Initial fetch (existing notifications) using axios with Authorization header
+  useEffect(() => {
+    if (!accessToken || !baseUrl) {
+      return;
+    }
+  
+    let mounted = true;
+  
     axios
       .get<Notification[]>(`${baseUrl}/notifications`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
         withCredentials: true,
       })
       .then((res) => {
+        if (!mounted) return;
+  
         setNotifications(res.data ?? []);
       })
       .catch((err) => {
-        console.error("Failed to fetch initial notifications", err);
+        if (!mounted) return;
+  
+        console.error(
+          "❌ Failed to fetch initial notifications:",
+          err
+        );
+  
         setError("Failed to load notifications");
       })
       .finally(() => {
+        if (!mounted) return;
+  
         setLoading(false);
       });
-
-    // SSE connection with token in query parameter
+  
     const eventSource = new EventSource(
-      `${baseUrl}/notifications/stream?token=${encodeURIComponent(accessToken)}`,
-      { withCredentials: true }
+      `${baseUrl}/notifications/stream?token=${encodeURIComponent(
+        accessToken
+      )}`,
+      {
+        withCredentials: true,
+      }
     );
-
-    eventSource.onopen = () => {
-      console.log("SSE connected");
-      setLoading(false);
-    };
-
-    eventSource.onmessage = (event) => {
+  
+    eventSource.addEventListener("connected", (event) => {
+      console.log("✅ SSE connected:", event.data);
+    });
+  
+    eventSource.addEventListener("notification", (event) => {
+      if (!mounted) return;
+  
       try {
         const notification: Notification = JSON.parse(event.data);
+  
         setNotifications((prev) => {
-          const exists = prev.some((item) => item.id === notification.id);
+          const exists = prev.some(
+            (item) => item.id === notification.id
+          );
+  
           if (exists) {
             return prev.map((item) =>
-              item.id === notification.id ? notification : item
+              item.id === notification.id
+                ? notification
+                : item
             );
           }
+  
           return [notification, ...prev];
         });
-      } catch (error) {
-        console.error("Invalid SSE notification:", error);
+      } catch (err) {
+        console.error(
+          "❌ Invalid SSE notification:",
+          err
+        );
       }
+    });
+  
+    eventSource.onerror = (err) => {
+      console.error("❌ SSE connection error:", err);
     };
-
-    eventSource.onerror = () => {
-      console.error("SSE error occurred. Reconnecting...");
-      // Browser will auto-reconnect
-    };
-
-    return eventSource;
-  }, [accessToken]);
-
-  useEffect(() => {
-    const eventSource = fetchNotifications();
+  
     return () => {
-      eventSource?.close();
+      mounted = false;
+      eventSource.close();
     };
-  }, [fetchNotifications]);
+  }, [accessToken, baseUrl]);
 
   const markAsRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((notification) =>
         notification.id === id
-          ? { ...notification, read: true }
+          ? {
+              ...notification,
+              read: true,
+            }
           : notification
       )
     );
-    // Optional API call
+
     axios
       .patch(
         `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/read`,
         {},
         {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
           withCredentials: true,
         }
       )
-      .catch((err) => console.error("Failed to mark as read", err));
+      .catch((error) => {
+        console.error(
+          "❌ Failed to mark notification as read:",
+          error
+        );
+      });
   };
 
   const markAllAsRead = () => {
-    if (unreadCount === 0) return;
+    if (unreadCount === 0) {
+      return;
+    }
+
+    const previousNotifications = notifications;
 
     setNotifications((prev) =>
       prev.map((notification) => ({
@@ -280,30 +317,57 @@ export default function NotificationsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/notifications/read-all`,
         {},
         {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
           withCredentials: true,
         }
       )
-      .then(() => toast.success("All notifications marked as read"))
-      .catch((err) => {
-        console.error("Failed to mark all as read", err);
+      .then(() => {
+        toast.success("All notifications marked as read");
+      })
+      .catch((error) => {
+        console.error(
+          "❌ Failed to mark all as read:",
+          error
+        );
+
+        setNotifications(previousNotifications);
+
         toast.error("Failed to mark all as read");
       });
   };
 
   const deleteNotification = (id: string) => {
+    const previousNotifications = notifications;
+
     setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id)
+      prev.filter(
+        (notification) => notification.id !== id
+      )
     );
 
     axios
-      .delete(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        withCredentials: true,
+      .delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          withCredentials: true,
+        }
+      )
+      .then(() => {
+        toast.success("Notification deleted");
       })
-      .then(() => toast.success("Notification deleted"))
-      .catch((err) => {
-        console.error("Failed to delete notification", err);
+      .catch((error) => {
+        console.error(
+          "❌ Failed to delete notification:",
+          error
+        );
+
+        setNotifications(previousNotifications);
+
         toast.error("Failed to delete notification");
       });
   };
@@ -320,14 +384,9 @@ export default function NotificationsPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-center">
         <div>
-          <p className="text-sm text-red-400">{error}</p>
-          <button
-            type="button"
-            onClick={() => fetchNotifications()}
-            className="mt-3 text-sm text-indigo-400 hover:text-indigo-300"
-          >
-            Retry
-          </button>
+          <p className="text-sm text-red-400">
+            {error}
+          </p>
         </div>
       </main>
     );
@@ -338,13 +397,17 @@ export default function NotificationsPage() {
       <div className="mx-auto w-full max-w-2xl">
         <header className="flex items-center justify-between px-4 py-4">
           <div>
-            <h1 className="text-lg font-semibold">Notifications</h1>
+            <h1 className="text-lg font-semibold">
+              Notifications
+            </h1>
+
             {unreadCount > 0 && (
               <p className="mt-0.5 text-xs text-slate-500">
                 {unreadCount} unread
               </p>
             )}
           </div>
+
           <button
             type="button"
             className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-900 hover:text-slate-300"
@@ -370,7 +433,9 @@ export default function NotificationsPage() {
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-20 text-slate-600">
             <Bell className="h-8 w-8" />
-            <p className="mt-3 text-sm">No notifications yet</p>
+            <p className="mt-3 text-sm">
+              No notifications yet
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-slate-900">
