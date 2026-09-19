@@ -77,7 +77,7 @@ export default function SignInPage() {
         🎬 Welcome Back
       </p>
       <h2 className="font-mono text-2xl font-bold text-slate-100 mb-1">
-        Sign in to Framewise
+        Sign in to CineCritic
       </h2>
       <p className="text-sm text-slate-500 mb-6">Continue your film journey.</p>
 

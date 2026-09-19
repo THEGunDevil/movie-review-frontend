@@ -37,7 +37,7 @@ export default function SignupPage() {
     control,
     name: "password",
   });
-  
+
   const confirmPassword = useWatch({
     control,
     name: "confirm_password",
@@ -97,7 +97,7 @@ export default function SignupPage() {
         🍿 Join the Community
       </p>
       <h2 className="font-mono text-2xl font-bold text-slate-100 mb-1">
-        Create your Framewise account
+        Create your CineCritic account
       </h2>
       <p className="text-sm text-slate-500 mb-6">
         Start rating and reviewing films.
