@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import axios from "axios";
-import { Loader2, Film } from "lucide-react";
+import { Film } from "lucide-react";
 
 import TVShowInfo from "@/components/TVShowsInfo";
 import Videos from "@/components/Videos";
@@ -18,7 +18,7 @@ import { CreditType, VideoType } from "@/models/Movie";
 import useCredits from "@/hooks/useCredits";
 import { GoToPage } from "@/lib/helpers";
 
-function getDisplayVideos(videos: any[]) {
+function getDisplayVideos(videos:any[]) {
   return videos
     .filter(
       (v) =>

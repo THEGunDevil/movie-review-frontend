@@ -5,16 +5,12 @@ import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import axios, { AxiosError } from "axios";
 import {
   CalendarDays,
-  Camera,
   ChevronRight,
-  ImagePlus,
   Loader2,
   MessageSquare,
   Settings,
   Star,
   ThumbsUp,
-  Trash2,
-  Upload,
   User,
   Users,
 } from "lucide-react";

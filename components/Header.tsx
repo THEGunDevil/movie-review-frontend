@@ -64,40 +64,18 @@ export function Header() {
   // =====================================================
 
   useEffect(() => {
-    console.log("🔔 Notification API effect");
-
-    console.log(
-      "🔑 accessToken:",
-      accessToken ? "AVAILABLE" : "MISSING"
-    );
-
-    console.log(
-      "🌐 API_URL:",
-      API_URL
-    );
 
     if (!accessToken) {
-      console.log(
-        "⛔ accessToken missing - skipping notifications"
-      );
       return;
     }
 
     if (!API_URL) {
-      console.error(
-        "❌ NEXT_PUBLIC_API_URL is undefined"
-      );
       return;
     }
 
     let cancelled = false;
 
     const loadNotifications = async () => {
-      console.log(
-        "📥 GET:",
-        `${API_URL}/notifications`
-      );
-
       try {
         setLoadingNotifications(true);
 
@@ -111,12 +89,6 @@ export function Header() {
               withCredentials: true,
             }
           );
-
-        console.log(
-          "✅ Notifications response:",
-          response.status,
-          response.data
-        );
 
         if (cancelled) {
           return;
@@ -166,9 +138,6 @@ export function Header() {
     console.log("📡 SSE effect");
 
     if (!accessToken) {
-      console.log(
-        "⛔ accessToken missing - skipping SSE"
-      );
       return;
     }
 
@@ -184,11 +153,6 @@ export function Header() {
     const url =
       `${API_URL}/notifications/stream?token=` +
       encodeURIComponent(accessToken);
-
-    console.log(
-      "📡 Opening SSE:",
-      `${API_URL}/notifications/stream?token=...`
-    );
 
     const eventSource =
       new EventSource(url, {

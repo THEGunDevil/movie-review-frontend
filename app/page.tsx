@@ -116,15 +116,6 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Loading state
-  if (
-    movieData.loading ||
-    topMovies.loading ||
-    genreData.loading ||
-    genreMoviesData.loading
-  ) {
-    return <Loading />;
-  }
 
   // Error state
   if (movieData.error) {
